@@ -38,7 +38,7 @@ public class ConnectionPool {
 
 	// Close all connections and close the system
 	public void closeAllConnection() {
-		// TODO
+		// TODO Connection close
 	}
 	
 }
