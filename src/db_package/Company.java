@@ -3,6 +3,7 @@
  */
 package db_package;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -13,7 +14,7 @@ public class Company {
 	private long id;
 	private String compName, password, email;
 	
-	private Collection<Coupon> coupon;
+	private Collection<Coupon> coupon ;
 
 	public Company() {
 		super();

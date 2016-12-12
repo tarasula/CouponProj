@@ -1,44 +1,81 @@
 package db_package;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Set;
 
 public class ConnectionPool {
-	
+
 	/*
-	 * @author Andrey Orlov
-	 * Singleton patern.
-	 * For multithreading system need to change the Singleton class
+	 * @author Andrey Orlov Singleton patern.
+	 * 
 	 */
-	
+
 	private static ConnectionPool instance = null;
+
+	private final String connectionUrl = "jdbc:sqlserver://L1000118470:1433;databaseName=CouponProject;integratedSecurity=true;";
+	private final String driverString = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+	private Object key = new Object();
 	
-	Set connectionSet ;
-	
-	private ConnectionPool(){		
-	}
-	
-	public ConnectionPool getInstance(){
-		if(instance == null){
+	private Set<Connection> connections = new HashSet<>(10);
+	private ConnectionPool() {}
+
+	public static synchronized ConnectionPool getInstance() {
+		if (instance == null) {
 			instance = new ConnectionPool();
 		}
 		return instance;
 	}
 	
-	// If not exist free connection this method is lock... (What exactly is lock?)
-	public void getConnection() {
-		// TODO
-	}
-
-	// Return connection and unlocking who is waiting for unlock
-	public Connection returnConnection(Connection con) {
-		// TODO
+	public Connection getConnection() {
+		Connection con = null;
+		try {
+			synchronized (key) {
+				while (true) {
+					if (connections.size() <= 10) {
+						connections.add(con);
+						Class.forName(driverString);
+						con = DriverManager.getConnection(connectionUrl);
+						System.out.println("Connected ");
+						return con;
+					} else {
+						System.out.println("No free connection please wait...");
+						key.wait();
+					}
+				}
+			}
+		} catch (SQLException | ClassNotFoundException | InterruptedException e) {
+			e.printStackTrace();
+		}
 		return con;
 	}
 
-	// Close all connections and close the system
-	public void closeAllConnection() {
-		// TODO Connection close
+	public void returnConnection(Connection con) {
+		try {
+			synchronized (key) {
+				connections.remove(con);
+				key.notify();
+				con.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
-	
+
+	public void closeAllConnection() {
+		try {
+			synchronized (key) {
+				for (Connection c : connections) {
+					c.close();
+				}
+				key.notifyAll();
+				System.exit(0);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 }
