@@ -27,7 +27,7 @@ public class CouponSystem {
 		}
 		return instance;
 	}
-
+	//Why we need name and password? 
 	public CouponClientFacade login(String name, int password, String type) {
 		//TODO need to add name & password to IF
 		if (type.equals("ADMIN")) {
