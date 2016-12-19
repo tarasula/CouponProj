@@ -6,15 +6,20 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import exceptions.UpdateException;
 import util.SQLConstantsQuery;
 
 public class CustomerDBDAO implements CustomerDAO {
 
-private ConnectionPool pool;
-	
-	
-	private Statement getStatment(){
+	private ConnectionPool pool;
+
+	public CustomerDBDAO() {
+	}
+
+	// TODO Read Itay mail.
+	private Statement getStatment() {
 		Connection con = null;
 		Statement st = null;
 		con = pool.getInstance().getConnection();
@@ -25,13 +30,17 @@ private ConnectionPool pool;
 		}
 		return st;
 	}
-	
+
 	@Override
 	public void createCustomer(Customer cust) {
+		Statement st;
 		try {
-			getStatment().executeQuery(SQLConstantsQuery.INSERT_INTO_CUSTOMER_VALUES
-					+ "(" + cust.getId() + "," + cust.getCustName() 
-					+ "," + cust.getPassword() + ");");
+			st = getStatment();
+			if (st != null) {
+				st.execute(SQLConstantsQuery.INSERT_INTO_CUSTOMER_VALUES + "(" + cust.getId() + ",'"
+						+ cust.getCustName() + "','" + cust.getPassword() + "');");
+				System.out.println("Customer " + cust.getCustName() + " added to DB");
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -39,8 +48,13 @@ private ConnectionPool pool;
 
 	@Override
 	public void removeCustomer(Customer cust) {
+		Statement st;
 		try {
-			getStatment().executeQuery(SQLConstantsQuery.REMOVE_CUSTOMER + cust.getId());
+			st = getStatment();
+			if (st != null) {
+				st.execute(SQLConstantsQuery.REMOVE_CUSTOMER + cust.getId());
+				System.out.println("The Customer " + cust.getCustName() + " removed");
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -48,28 +62,43 @@ private ConnectionPool pool;
 
 	@Override
 	public void updateCustomer(Customer cust) {
-		ResultSet rs;
 		Customer customer = getCustomer((int) cust.getId());
-		customer.setId(cust.getId());
-		customer.setCustName(cust.getCustName());
-		customer.setPassword(cust.getPassword());
+		if (customer.getId() == cust.getId()) {
+			customer.setId(cust.getId());
+			customer.setCustName(cust.getCustName());
+			customer.setPassword(cust.getPassword());
 			try {
-				rs = getStatment().executeQuery(SQLConstantsQuery.UPDATE_CUSTOMER_SET );
+				getStatment().execute(SQLConstantsQuery.UPDATE_CUSTOMER_SET + customer.getId() + ", CUST_NAME = '"
+						+ customer.getCustName() + "', PASSWORD = '" + customer.getPassword() + "' WHERE ID = "
+						+ customer.getId());
+				System.out.println("The Customer " + customer.getCustName() + " was updated");
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
+		} else {
+			try {
+				throw new UpdateException("The Customer is not exist. You can add the Customer to DB.");
+			} catch (UpdateException e) {
+				e.printStackTrace();
+				e.getMessage();
+			}
+		}
 	}
 
 	@Override
-	public Customer getCustomer(int id) {
+	public Customer getCustomer(long id) {
 		Customer customer = new Customer();
 		ResultSet rs;
+		Statement st;
 		try {
-			rs = getStatment().executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_ID + id );
-			while(rs.next()){
-				customer.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
-				customer.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME));
-				customer.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD));
+			st = getStatment();
+			if (st != null) {
+				rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_ID + id);
+				while (rs.next()) {
+					customer.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
+					customer.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME));
+					customer.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD));
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -80,40 +109,77 @@ private ConnectionPool pool;
 	@Override
 	public Collection<Customer> getAllCustomer() {
 		ResultSet rs;
-		ArrayList<Customer> companyList = new ArrayList<>();
+		ArrayList<Customer> customerList = new ArrayList<>();
+		Statement st;
 		try {
-			rs = getStatment().executeQuery(SQLConstantsQuery.SELECT_ALL_CUSTOMERS);
-			while (rs.next()) {
-				Customer cust = new Customer();
-				cust.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
-				cust.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME));
-				cust.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD));
-				companyList.add(cust);
+			st = getStatment();
+			if (st != null) {
+				rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_CUSTOMERS);
+				while (rs.next()) {
+					Customer cust = new Customer();
+					cust.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
+					cust.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME));
+					cust.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD));
+					customerList.add(cust);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return companyList;
+		return customerList;
 	}
 
 	@Override
-	public Collection<Coupon> getCoupons() {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Coupon> getCoupons() {
+		ResultSet rs;
+		ArrayList<Coupon> customerList = new ArrayList<>();
+		Statement st;
+		String typeFromDB;
+		try {
+			st = getStatment();
+			if (st != null) {
+				rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_CUSTOMER_COUPONS);
+				while (rs.next()) {
+					Coupon coupon = new Coupon();
+					coupon.setId(rs.getLong(SQLConstantsQuery.COUPON_ID));
+					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE));
+					coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
+					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
+					coupon.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
+//					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE);
+//					CouponType ct = CouponType.valueOf(typeFromDB.toUpperCase(Locale.ENGLISH));
+//					coupon.setType(ct);
+					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE));
+					coupon.setPrice(rs.getFloat(SQLConstantsQuery.COUPON_PRICE));
+					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE));
+					customerList.add(coupon);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return customerList;
 	}
 
 	@Override
 	public boolean login(String custName, int password) {
 		ResultSet rs;
+		Statement st;
 		try {
-			rs = getStatment().executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_PASSWORD_BY_NAME + custName);
-			int psswrd = rs.getInt(SQLConstantsQuery.CUSTOMER_PASSWORD);
-			if(password == psswrd){
-				return true;
+			st = getStatment();
+			if (st != null) {
+				rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_PASSWORD_BY_NAME + "'" + custName + "'");
+				while (rs.next()) {
+					if (password == rs.getInt(SQLConstantsQuery.CUSTOMER_PASSWORD)) {
+						System.out.println("Login success.");
+						return true;
+					}
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		System.out.println("Login failed.");
 		return false;
 	}
 

@@ -14,7 +14,7 @@ public interface CustomerDAO {
 	public void createCustomer(Customer crCust);
 	public void removeCustomer(Customer rmCust);
 	public void updateCustomer(Customer upCust);
-	public Customer getCustomer(int id);
+	public Customer getCustomer(long id);
 	public Collection<Customer> getAllCustomer();
 	public Collection<Coupon> getCoupons();
 	public boolean login(String custName, int password);

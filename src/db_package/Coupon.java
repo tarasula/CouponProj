@@ -3,7 +3,10 @@
  */
 package db_package;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author Andrey Orlov
@@ -17,9 +20,24 @@ public class Coupon {
 	private int amount;
 	
 	private CouponType type;
+	protected static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd", Locale.US);
 	
 	public Coupon(){
 		
+	}
+
+	public Coupon(long id, String title, String message, String image, double price, 
+			String startDate, String endDate, int amount, CouponType type) throws ParseException {
+		super();
+		this.id = id;
+		this.title = title;
+		this.message = message;
+		this.image = image;
+		this.price = price;
+		this.startDate = formatter.parse(startDate);
+		this.endDate = formatter.parse(endDate);
+		this.amount = amount;
+		this.type = type;
 	}
 
 	public long getId() {
@@ -62,16 +80,16 @@ public class Coupon {
 		this.price = price;
 	}
 
-	public Date getStartDate() {
-		return startDate;
+	public String getStartDate() {
+		return formatter.format(this.startDate);
 	}
 
 	public void setStartDate(Date startDate) {
 		this.startDate = startDate;
 	}
 
-	public Date getEndDate() {
-		return endDate;
+	public String getEndDate() {
+		return formatter.format(this.endDate);
 	}
 
 	public void setEndDate(Date endDate) {

@@ -19,7 +19,7 @@ public class ConnectionPool {
 	private final String driverString = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 	private Object key = new Object();
 	
-	private Set<Connection> connections = new HashSet<>(10);
+	private Set<Connection> connections = new HashSet<>();
 	private ConnectionPool() {}
 
 	public static synchronized ConnectionPool getInstance() {
@@ -35,10 +35,9 @@ public class ConnectionPool {
 			synchronized (key) {
 				while (true) {
 					if (connections.size() <= 10) {
-						connections.add(con);
 						Class.forName(driverString);
 						con = DriverManager.getConnection(connectionUrl);
-						System.out.println("Connected ");
+						connections.add(con);
 						return con;
 					} else {
 						System.out.println("No free connection please wait...");

@@ -14,7 +14,7 @@ public interface CouponDAO {
 	public void createCoupon(Coupon crCoup);
 	public void removeCoupon(Coupon rmCoup);
 	public void updateCoupon(Coupon upCoup);
-	public Coupon getCoupon(int id);
+	public Coupon getCoupon(long id);
 	public Collection<Coupon> getAllCoupon();
 	public Collection<Coupon> getCouponByType(CouponType coupType);
 	

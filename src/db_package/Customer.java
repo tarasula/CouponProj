@@ -19,6 +19,15 @@ public class Customer {
 	public Customer() {
 		super();
 	}
+	
+
+	public Customer(long id, String custName, String password) {
+		super();
+		this.id = id;
+		this.custName = custName;
+		this.password = password;
+	}
+
 
 	public long getId() {
 		return id;

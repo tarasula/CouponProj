@@ -19,6 +19,16 @@ public class Company {
 	public Company() {
 		super();
 	}
+	
+
+	public Company(long id, String compName, String password, String email) {
+		super();
+		this.id = id;
+		this.compName = compName;
+		this.password = password;
+		this.email = email;
+	}
+
 
 	public long getId() {
 		return id;
