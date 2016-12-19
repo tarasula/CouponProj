@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
-import exceptions.UpdateException;
+import exceptions.ProjectException;
 import util.SQLConstantsQuery;
 
 public class CouponDBDAO implements CouponDAO {
@@ -43,11 +43,12 @@ public class CouponDBDAO implements CouponDAO {
 					+ "','" + coup.getStartDate() + "','" + coup.getEndDate() + "'," 
 					+ coup.getAmount() + ",'" + coup.getType() + "','" + coup.getMessage()
 					+ "'," + coup.getPrice() + ",'" + coup.getImage() + "');");
+//			st.execute();
 			System.out.println("Coupon " + coup.getTitle() + " added to DB");
 			}else{
-				throw new UpdateException("The Statement is null...");
+				throw new ProjectException("The Statement is null...");
 			}
-		} catch (SQLException | UpdateException e) {
+		} catch (SQLException | ProjectException e) {
 			e.printStackTrace();
 		}
 	}
@@ -92,8 +93,8 @@ public class CouponDBDAO implements CouponDAO {
 			}
 		}else{
 			try {
-				throw new UpdateException("The Coupon is not exist. You can add this Coupon to DB.");
-			} catch (UpdateException e) {
+				throw new ProjectException("The Coupon is not exist. You can add this Coupon to DB.");
+			} catch (ProjectException e) {
 				e.printStackTrace();
 				e.getMessage();
 			}
@@ -113,16 +114,16 @@ public class CouponDBDAO implements CouponDAO {
 				rs = st.executeQuery(SQLConstantsQuery.SELECT_COUPON_BY_ID + id);
 				while (rs.next()) {
 					coupon.setId(rs.getLong(SQLConstantsQuery.COUPON_ID));
-					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE));
+					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
 					coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
 					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
 					coupon.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE);
+					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE).trim();
 					CouponType ct = CouponType.valueOf(typeFromDB.toUpperCase(Locale.ENGLISH));
 					coupon.setType(ct);
-					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE));
+					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
 					coupon.setPrice(rs.getDouble(SQLConstantsQuery.COUPON_PRICE));
-					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE));
+					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
 				}
 			}
 		} catch (SQLException e) {
@@ -144,19 +145,19 @@ public class CouponDBDAO implements CouponDAO {
 				while (rs.next()) {
 					Coupon coup = new Coupon();
 					coup.setId(rs.getLong(SQLConstantsQuery.COMPANY_ID));
-					coup.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE));
+					coup.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
 					coup.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
 					coup.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
 					coup.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE);
+					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE).trim();
 					for (CouponType ct : CouponType.values()) {
 						if (typeFromDB.equals(ct)) {
 							coup.setType(ct);
 						}
 					}
-					coup.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE));
+					coup.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
 					coup.setPrice(rs.getDouble(SQLConstantsQuery.COUPON_PRICE));
-					coup.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE));
+					coup.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
 					couponList.add(coup);
 				}
 			}
@@ -179,19 +180,19 @@ public class CouponDBDAO implements CouponDAO {
 				while (rs.next()) {
 					Coupon coup = new Coupon();
 					coup.setId(rs.getLong(SQLConstantsQuery.COMPANY_ID));
-					coup.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE));
+					coup.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
 					coup.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
 					coup.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
 					coup.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE);
+					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE).trim();
 					for (CouponType ct : CouponType.values()) {
 						if (typeFromDB.equals(ct)) {
 							coup.setType(ct);
 						}
 					}
-					coup.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE));
+					coup.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
 					coup.setPrice(rs.getDouble(SQLConstantsQuery.COUPON_PRICE));
-					coup.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE));
+					coup.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
 					couponListByType.add(coup);
 				}
 			}

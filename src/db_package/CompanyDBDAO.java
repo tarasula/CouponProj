@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
-import exceptions.UpdateException;
+import exceptions.ProjectException;
 import util.SQLConstantsQuery;
 
 public class CompanyDBDAO implements CompanyDAO {
@@ -83,8 +83,8 @@ public class CompanyDBDAO implements CompanyDAO {
 			}
 		} else {
 			try {
-				throw new UpdateException("The Company is not exist. You can add this Company to DB.");
-			} catch (UpdateException e) {
+				throw new ProjectException("The Company is not exist. You can add this Company to DB.");
+			} catch (ProjectException e) {
 				e.printStackTrace();
 				e.getMessage();
 			}
@@ -102,9 +102,9 @@ public class CompanyDBDAO implements CompanyDAO {
 				rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_BY_ID + l);
 				while (rs.next()) {
 					company.setId(rs.getLong(SQLConstantsQuery.COMPANY_ID));
-					company.setCompName(rs.getString(SQLConstantsQuery.COMPANY_COMP_NAME));
-					company.setPassword(rs.getString(SQLConstantsQuery.COMPANY_PASSWORD));
-					company.setEmail(rs.getString(SQLConstantsQuery.COMPANY_EMAIL));
+					company.setCompName(rs.getString(SQLConstantsQuery.COMPANY_COMP_NAME).trim());
+					company.setPassword(rs.getString(SQLConstantsQuery.COMPANY_PASSWORD).trim());
+					company.setEmail(rs.getString(SQLConstantsQuery.COMPANY_EMAIL).trim());
 				}
 			}
 		} catch (SQLException e) {
@@ -125,9 +125,9 @@ public class CompanyDBDAO implements CompanyDAO {
 				while (rs.next()) {
 					Company comp = new Company();
 					comp.setId(rs.getLong(SQLConstantsQuery.COMPANY_ID));
-					comp.setCompName(rs.getString(SQLConstantsQuery.COMPANY_COMP_NAME));
-					comp.setPassword(rs.getString(SQLConstantsQuery.COMPANY_PASSWORD));
-					comp.setEmail(rs.getString(SQLConstantsQuery.COMPANY_EMAIL));
+					comp.setCompName(rs.getString(SQLConstantsQuery.COMPANY_COMP_NAME).trim());
+					comp.setPassword(rs.getString(SQLConstantsQuery.COMPANY_PASSWORD).trim());
+					comp.setEmail(rs.getString(SQLConstantsQuery.COMPANY_EMAIL).trim());
 					companyList.add(comp);
 				}
 			}
@@ -150,16 +150,16 @@ public class CompanyDBDAO implements CompanyDAO {
 				while (rs.next()) {
 					Coupon coupon = new Coupon();
 					coupon.setId(rs.getLong(SQLConstantsQuery.COUPON_ID));
-					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE));
+					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
 					coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
 					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
 					coupon.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-//					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE);
-//					CouponType ct = CouponType.valueOf(typeFromDB.toUpperCase(Locale.ENGLISH));
-//					coupon.setType(ct);
-					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE));
+					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+					CouponType ct = CouponType.valueOf(typeFromDB.toUpperCase(Locale.ENGLISH));
+					coupon.setType(ct);
+					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
 					coupon.setPrice(rs.getFloat(SQLConstantsQuery.COUPON_PRICE));
-					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE));
+					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
 					couponList.add(coupon);
 				}
 			}

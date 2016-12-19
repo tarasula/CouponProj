@@ -26,7 +26,7 @@ public class MainTest{
 		
 		CompanyDBDAO c2 = new CompanyDBDAO();
 		Company com = new Company(2, "Andrey", "131", "email1");
-		checkList(c2.getCoupons());
+//		checkList(c2.getCoupons());
 //		c2.createCompany(com);
 //		c2.removeCompany(com);
 //		c2.updateCompany(com);
@@ -45,12 +45,12 @@ public class MainTest{
 		
 		CouponDBDAO c = new CouponDBDAO();
 //		Coupon coupon = new Coupon(2, "title2", "message2", "image", 3.4, new Date(2012,1,1), new Date(2013,2,2), 123, CouponType.FOOD);
-		Coupon coupon = new Coupon(17, "title17", "message17", "17", 44.2, "2015-11-23", "2015-12-23", 7732, CouponType.ELECTRICITY);
+		Coupon coupon = new Coupon(2, "title17", "message17", "17", 44.2, "2015-11-23", "2015-12-23", 7732, CouponType.HEALTH);
 		
 //		c.createCoupon(coupon);
 //		c.removeCoupon(coupon);
 //		c.updateCoupon(coupon);
-//		System.out.println(c.getCoupon(coupon.getId()));
+		System.out.println(c.getCoupon(coupon.getId()));
 //		ArrayList<Coupon> list = (ArrayList) c.getAllCoupon();
 //		checkList(list);
 //		checkList(c.getCouponByType(CouponType.HEALTH));

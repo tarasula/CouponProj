@@ -7,8 +7,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
-import exceptions.UpdateException;
+import exceptions.ProjectException;
 import util.SQLConstantsQuery;
 
 public class CustomerDBDAO implements CustomerDAO {
@@ -77,8 +78,8 @@ public class CustomerDBDAO implements CustomerDAO {
 			}
 		} else {
 			try {
-				throw new UpdateException("The Customer is not exist. You can add the Customer to DB.");
-			} catch (UpdateException e) {
+				throw new ProjectException("The Customer is not exist. You can add the Customer to DB.");
+			} catch (ProjectException e) {
 				e.printStackTrace();
 				e.getMessage();
 			}
@@ -96,8 +97,8 @@ public class CustomerDBDAO implements CustomerDAO {
 				rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_ID + id);
 				while (rs.next()) {
 					customer.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
-					customer.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME));
-					customer.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD));
+					customer.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME).trim());
+					customer.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim());
 				}
 			}
 		} catch (SQLException e) {
@@ -118,8 +119,8 @@ public class CustomerDBDAO implements CustomerDAO {
 				while (rs.next()) {
 					Customer cust = new Customer();
 					cust.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
-					cust.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME));
-					cust.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD));
+					cust.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME).trim());
+					cust.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim());
 					customerList.add(cust);
 				}
 			}
@@ -142,16 +143,16 @@ public class CustomerDBDAO implements CustomerDAO {
 				while (rs.next()) {
 					Coupon coupon = new Coupon();
 					coupon.setId(rs.getLong(SQLConstantsQuery.COUPON_ID));
-					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE));
+					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
 					coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
 					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
 					coupon.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-//					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE);
-//					CouponType ct = CouponType.valueOf(typeFromDB.toUpperCase(Locale.ENGLISH));
-//					coupon.setType(ct);
-					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE));
+					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+					CouponType ct = CouponType.valueOf(typeFromDB.toUpperCase(Locale.ENGLISH));
+					coupon.setType(ct);
+					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
 					coupon.setPrice(rs.getFloat(SQLConstantsQuery.COUPON_PRICE));
-					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE));
+					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
 					customerList.add(coupon);
 				}
 			}

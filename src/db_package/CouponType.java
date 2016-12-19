@@ -26,4 +26,17 @@ public enum CouponType {
     public String type() {
         return type;
     }
+    
+    public static CouponType fromString(String text) {
+        if (text != null) {
+          for (CouponType b : CouponType .values()) {
+            if (text.equalsIgnoreCase(b.type())) {
+              return b;
+            }
+          }
+        }
+        return null;
+      }
+    
+    
 }
