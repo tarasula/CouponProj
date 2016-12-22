@@ -36,9 +36,16 @@ public class CouponDBDAO implements CouponDAO {
 	@Override
 	public void createCoupon(Coupon coup) {
 		Statement st;
+		ResultSet rsType;
 		try {
 			st = getStatment();
 			if(st != null){
+				rsType = st.executeQuery(SQLConstantsQuery.SELECT_TYPES_OF_COUPONS);
+				while(rsType.next()){
+					if(rsType.getString(SQLConstantsQuery.COUPON_TYPE).toString().equals(coup.getType().toString())){
+						throw new ProjectException("Can't insert coupon with this type. The type is exist!");
+					}
+				}
 			st.execute(SQLConstantsQuery.INSERT_INTO_COUPON_VALUES
 					+ "(" + coup.getId() + ",'" + coup.getTitle()
 					+ "','" + coup.getStartDate() + "','" + coup.getEndDate() + "'," 
@@ -65,7 +72,7 @@ public class CouponDBDAO implements CouponDAO {
 			if (st != null) {
 				st.execute(SQLConstantsQuery.REMOVE_COUPON + coup.getId());
 				st.execute(SQLConstantsQuery.DELETE_FROM_COMPANY_COUPON + coup.getId());
-				System.out.println("The Coupon " + coup.getTitle() + " removed");
+				System.out.println("The Coupon " + coup.getTitle().trim() + " removed");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

@@ -52,7 +52,7 @@ public class SQLConstantsQuery {
 	public static final String SELECT_ALL_COUPONS_BY_TYPE = "SELECT * FROM Coupon WHERE TYPE = '";
 	
 	public static final String REMOVE_COUPON = "DELETE FROM Coupon WHERE ID = ";
-//	public static final String SELECT_CUSTOMER_PASSWORD_BY_NAME = "SELECT PASSWORD FROM Customer WHERE CUST_NAME = ";
+	public static final String SELECT_TYPES_OF_COUPONS = "select TYPE from Coupon";
 	
 	
 	/*
@@ -64,5 +64,5 @@ public class SQLConstantsQuery {
 	public static final String SELECT_COUPON_ID = "SELECT COUPON_ID FROM Company_Coupon WHERE COMP_ID = (SELECT ID FROM Company WHERE COMP_NAME = ";
 	public static final String COUPON_ID = "COUPON_ID";
 	public static final String SELECT_COUPONS_BY_TYPE = "select * from Coupon where Coupon.ID IN (select Company_Coupon.COUPON_ID from Company_Coupon where Company_Coupon.COMP_ID = (select Company.ID from Company where Company.COMP_NAME = 'Ness')) and Coupon.TYPE = ;"; 
-	
+	public static final String SELECT_END_DATE_OF_COUPONS = "select ID, TITLE, END_DATE from Coupon";
 }
