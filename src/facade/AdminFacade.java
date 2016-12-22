@@ -15,61 +15,61 @@ public class AdminFacade implements CouponClientFacade {
 	private CustomerDBDAO customerDAO;
 	private String ADMIN_NAME = "admin";
 	private int PASSWORD = 1234;
-	
+
 	public AdminFacade() {
-		
+		companyDAO = new CompanyDBDAO();
+		customerDAO = new CustomerDBDAO();
 	}
 
 	/*
-	 *Company methods 
+	 * Company methods
 	 */
-	public void createCompany(Company comp){
+	public void createCompany(Company comp) {
 		companyDAO.createCompany(comp);
 	}
-	
-	public void removeCompany(Company comp){
+
+	public void removeCompany(Company comp) {
 		companyDAO.removeCompany(comp);
 	}
-	
-	public void updateCompany(Company comp){
+
+	public void updateCompany(Company comp) {
 		companyDAO.updateCompany(comp);
 	}
-	
-	public Company getCompany(long id){
+
+	public Company getCompany(long id) {
 		return companyDAO.getCompany(id);
 	}
-	
-	public Collection<Company> getAllCompanies(){
+
+	public Collection<Company> getAllCompanies() {
 		return companyDAO.getAllCompanies();
 	}
-	
+
 	/*
 	 * Customer methods
 	 */
-	public void createCustomer(Customer cost){
+	public void createCustomer(Customer cost) {
 		customerDAO.createCustomer(cost);
 	}
-	
-	public void removeCustomer(Customer cost){
+
+	public void removeCustomer(Customer cost) {
 		customerDAO.removeCustomer(cost);
 	}
-	
-	public void updateCustomer(Customer cost){
+
+	public void updateCustomer(Customer cost) {
 		customerDAO.updateCustomer(cost);
 	}
-	
-	public Customer getCustomer(long id){
+
+	public Customer getCustomer(long id) {
 		return customerDAO.getCustomer(id);
 	}
-	
-	public Collection<Customer> getAllCustomers(){
+
+	public Collection<Customer> getAllCustomers() {
 		return customerDAO.getAllCustomer();
 	}
-	
-	//Which clientType should be on AdminFacade in login
+
 	@Override
 	public CouponClientFacade login(String name, int password, String clienType) {
-		if(name.equalsIgnoreCase(ADMIN_NAME) && password == PASSWORD){			
+		if (name.equalsIgnoreCase(ADMIN_NAME) && password == PASSWORD) {
 			return (CouponClientFacade) ConnectionPool.getInstance();
 		}
 		try {

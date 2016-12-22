@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import exceptions.ProjectException;
+import facade.CustomerFacade;
 import util.SQLConstantsQuery;
 
 public class CustomerDBDAO implements CustomerDAO {
@@ -19,7 +20,6 @@ public class CustomerDBDAO implements CustomerDAO {
 	public CustomerDBDAO() {
 	}
 
-	// TODO Read Itay mail.
 	private Statement getStatment() {
 		Connection con = null;
 		Statement st = null;
@@ -139,10 +139,10 @@ public class CustomerDBDAO implements CustomerDAO {
 		try {
 			st = getStatment();
 			if (st != null) {
-				rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_CUSTOMER_COUPONS);
+				rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_CUSTOMER_COUPONS + "'" + CustomerFacade.getCustomerName() + "')");
 				while (rs.next()) {
 					Coupon coupon = new Coupon();
-					coupon.setId(rs.getLong(SQLConstantsQuery.COUPON_ID));
+					coupon.setId(rs.getLong(SQLConstantsQuery.ID));
 					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
 					coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
 					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));

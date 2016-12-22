@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 
 import exceptions.ProjectException;
+import facade.CompanyFacade;
 import util.SQLConstantsQuery;
 
 public class CouponDBDAO implements CouponDAO {
@@ -43,8 +44,11 @@ public class CouponDBDAO implements CouponDAO {
 					+ "','" + coup.getStartDate() + "','" + coup.getEndDate() + "'," 
 					+ coup.getAmount() + ",'" + coup.getType() + "','" + coup.getMessage()
 					+ "'," + coup.getPrice() + ",'" + coup.getImage() + "');");
-//			st.execute();
-			System.out.println("Coupon " + coup.getTitle() + " added to DB");
+			ResultSet rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_ID_BY_NAME + "'" + CompanyFacade.getCompanyName() + "'");
+			int companyID = rs.getInt(SQLConstantsQuery.COMPANY_ID);
+			st.execute(SQLConstantsQuery.INSERT_INTO_COMPANY_COUPON_VALUES
+					+ "(" + companyID + "," + coup.getId());
+			System.out.println("Coupon " + coup.getTitle() + " added to Coupon DB and Conpany Coupon DB");
 			}else{
 				throw new ProjectException("The Statement is null...");
 			}
@@ -60,6 +64,7 @@ public class CouponDBDAO implements CouponDAO {
 			st = getStatment();
 			if (st != null) {
 				st.execute(SQLConstantsQuery.REMOVE_COUPON + coup.getId());
+				st.execute(SQLConstantsQuery.DELETE_FROM_COMPANY_COUPON + coup.getId());
 				System.out.println("The Coupon " + coup.getTitle() + " removed");
 			}
 		} catch (SQLException e) {
@@ -113,7 +118,7 @@ public class CouponDBDAO implements CouponDAO {
 			if (st != null) {
 				rs = st.executeQuery(SQLConstantsQuery.SELECT_COUPON_BY_ID + id);
 				while (rs.next()) {
-					coupon.setId(rs.getLong(SQLConstantsQuery.COUPON_ID));
+					coupon.setId(rs.getLong(SQLConstantsQuery.ID));
 					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
 					coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
 					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
@@ -199,7 +204,7 @@ public class CouponDBDAO implements CouponDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return null;
+		return couponListByType;
 	}
 
 }

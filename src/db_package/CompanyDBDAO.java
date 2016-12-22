@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import exceptions.ProjectException;
+import facade.CompanyFacade;
 import util.SQLConstantsQuery;
 
 public class CompanyDBDAO implements CompanyDAO {
@@ -146,10 +147,10 @@ public class CompanyDBDAO implements CompanyDAO {
 		try {
 			st = getStatment();
 			if (st != null) {
-				rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_COMPANY_COUPONS);
+				rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_COMPANY_COUPONS + "'" + CompanyFacade.getCompanyName() + "')");
 				while (rs.next()) {
 					Coupon coupon = new Coupon();
-					coupon.setId(rs.getLong(SQLConstantsQuery.COUPON_ID));
+					coupon.setId(rs.getLong(SQLConstantsQuery.ID));
 					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
 					coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
 					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));

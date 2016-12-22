@@ -9,6 +9,9 @@ import facade.CustomerFacade;
 public class CouponSystem {
 
 	private CouponDBDAO couponDAO;
+	private AdminFacade adminFacade;
+	private CompanyFacade companyFacade;
+	private CustomerFacade customerFacade;
 	private DailyCouponExpirationTask dceTask;
 
 	public static Object key = new Object();
@@ -29,13 +32,18 @@ public class CouponSystem {
 	}
 
 	public CouponClientFacade login(String name, int password, String type) {
-		//TODO need to add name & password to IF
-		if (type.equals("ADMIN")) {
-			return new AdminFacade();
-		} else if (type.equals("COMPANY")) {
-			return new CompanyFacade();
-		} else if (type.equals("CUSTOMER")) {
-			return new CustomerFacade();
+		if (type.equalsIgnoreCase("ADMIN") || type.equalsIgnoreCase("ADMINISTRATOR")) {
+			adminFacade = new AdminFacade();
+			return adminFacade.login(name, password, type);
+			
+		} else if (type.equalsIgnoreCase("COMPANY")) {
+			companyFacade = new CompanyFacade();
+			return companyFacade.login(name, password, type);
+			
+		} else if (type.equalsIgnoreCase("CUSTOMER")) {
+			customerFacade = new CustomerFacade();
+			return customerFacade.login(name, password, type);
+			
 		} else {
 			try {
 				throw new ProjectException("Log in failed, incorrect user type!");
