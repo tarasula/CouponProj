@@ -30,7 +30,7 @@ public class CouponSystem {
 		}
 		return instance;
 	}
-
+	//Why we need name and password? 
 	public CouponClientFacade login(String name, int password, String type) {
 		if (type.equalsIgnoreCase("ADMIN") || type.equalsIgnoreCase("ADMINISTRATOR")) {
 			adminFacade = new AdminFacade();
