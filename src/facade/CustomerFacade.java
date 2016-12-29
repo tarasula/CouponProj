@@ -1,18 +1,14 @@
 
 package facade;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import db_package.ConnectionPool;
 import db_package.Coupon;
 import db_package.CouponDBDAO;
+import db_package.CouponType;
 import db_package.CustomerDBDAO;
-import util.SQLConstantsQuery;
+import util.CheckCouponPrice;
 
 public class CustomerFacade implements CouponClientFacade {
 
@@ -27,39 +23,45 @@ public class CustomerFacade implements CouponClientFacade {
 	}
 
 	public void purchaseCoupon(Coupon coup) {
-		Connection con = ConnectionPool.getInstance().getConnection();
-		try {
-			Statement st = con.createStatement();
-			ResultSet rs = st.executeQuery(
-					SQLConstantsQuery.SELECT_CUSTOMER_ID_BY_NAME + "'" + CustomerFacade.customerName + "'");
-			int customerID = rs.getInt(SQLConstantsQuery.CUSTOMER_ID);
-			st.execute(SQLConstantsQuery.INSERT_INTO_CUSTOMER_COUPON_VALUES + "(" + customerID + "," + coup.getId());
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		couponDAO.purchaseCoupon(coup);
 	}
 
 	public Collection<Coupon> getAllPurchasedCoupons() {
 		return customerDAO.getCoupons();
 	}
 
-	public Collection<Coupon> getAllPurchasedCouponsByType(String type) {
+	public Collection<Coupon> getAllPurchasedCouponsByType(CouponType type) {
 		ArrayList<Coupon> purchasedCouponByType = new ArrayList<>();
 		ArrayList<Coupon> allPurchasedCoupons = (ArrayList<Coupon>) customerDAO.getCoupons();
 		for (int i = 0; i < allPurchasedCoupons.size(); i++) {
-			if (allPurchasedCoupons.get(i).getType().toString().equals(type)) {
+			if (allPurchasedCoupons.get(i).getType().toString().trim().equals(type.toString())) {
 				purchasedCouponByType.add(allPurchasedCoupons.get(i));
 			}
 		}
 		return purchasedCouponByType;
 	}
 
-	public Collection<Coupon> getAllPurchasedCouponsByPrice(int price) {
+	public Collection<Coupon> getAllPurchasedCouponsByPrice(double price) {
+		int count = CheckCouponPrice.countOfNumersAfterPoint(price);
 		ArrayList<Coupon> purchasedCouponByPrice = new ArrayList<>();
 		ArrayList<Coupon> allPurchasedCoupons = (ArrayList<Coupon>) customerDAO.getCoupons();
+		double correctPrice = 0;
+//		allPurchasedCoupons = (ArrayList<Coupon>) CheckCouponPrice.fixDBPrice(allPurchasedCoupons, price);
 		for (int i = 0; i < allPurchasedCoupons.size(); i++) {
-			if (allPurchasedCoupons.get(i).getPrice() == price) {
-				purchasedCouponByPrice.add(allPurchasedCoupons.get(i));
+			if (count == 1) {
+				correctPrice = CheckCouponPrice.getCorrectPrice(allPurchasedCoupons.get(i).getPrice(), count);
+				if (correctPrice == price) {
+					purchasedCouponByPrice.add(allPurchasedCoupons.get(i));
+				}
+			} else if (count == 2) {
+				correctPrice = CheckCouponPrice.getCorrectPrice(allPurchasedCoupons.get(i).getPrice(), count);
+				if (correctPrice == price) {
+					purchasedCouponByPrice.add(allPurchasedCoupons.get(i));
+				}
+			}else{
+				if(allPurchasedCoupons.get(i).getPrice() == price){
+					purchasedCouponByPrice.add(allPurchasedCoupons.get(i));
+				}
 			}
 		}
 		return purchasedCouponByPrice;
@@ -74,10 +76,10 @@ public class CustomerFacade implements CouponClientFacade {
 	}
 
 	@Override
-	public CouponClientFacade login(String name, int password, String clienType) {
+	public CouponClientFacade login(String name, String password, String clienType) {
 		CustomerFacade.setCustomerName(name);
 		if (customerDAO.login(name, password)) {
-			return (CouponClientFacade) customerDAO;
+			return this;
 		}
 		return null;
 	}

@@ -8,6 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import util.DateUtil;
+
 /**
  * @author Andrey Orlov
  *
@@ -20,7 +22,7 @@ public class Coupon {
 	private int amount;
 	
 	private CouponType type;
-	protected static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd", Locale.US);
+	
 	
 	public Coupon(){
 		
@@ -34,8 +36,8 @@ public class Coupon {
 		this.message = message;
 		this.image = image;
 		this.price = price;
-		this.startDate = formatter.parse(startDate);
-		this.endDate = formatter.parse(endDate);
+		this.startDate = DateUtil.formatter.parse(startDate);
+		this.endDate = DateUtil.formatter.parse(endDate);;
 		this.amount = amount;
 		this.type = type;
 	}
@@ -80,16 +82,16 @@ public class Coupon {
 		this.price = price;
 	}
 
-	public String getStartDate() {
-		return formatter.format(this.startDate);
+	public Date getStartDate() {
+		return startDate;
 	}
 
 	public void setStartDate(Date startDate) {
 		this.startDate = startDate;
 	}
 
-	public String getEndDate() {
-		return formatter.format(this.endDate);
+	public Date getEndDate() {
+		return endDate;
 	}
 
 	public void setEndDate(Date endDate) {

@@ -15,15 +15,13 @@ import util.SQLConstantsQuery;
 
 public class CustomerDBDAO implements CustomerDAO {
 
-	private ConnectionPool pool;
-
 	public CustomerDBDAO() {
 	}
 
 	private Statement getStatment() {
 		Connection con = null;
 		Statement st = null;
-		con = pool.getInstance().getConnection();
+		con = ConnectionPool.getInstance().getConnection();
 		try {
 			st = con.createStatement();
 		} catch (SQLException e) {
@@ -35,16 +33,34 @@ public class CustomerDBDAO implements CustomerDAO {
 	@Override
 	public void createCustomer(Customer cust) {
 		Statement st;
-		try {
-			st = getStatment();
-			if (st != null) {
-				st.execute(SQLConstantsQuery.INSERT_INTO_CUSTOMER_VALUES + "(" + cust.getId() + ",'"
-						+ cust.getCustName() + "','" + cust.getPassword() + "');");
-				System.out.println("Customer " + cust.getCustName() + " added to DB");
+		ArrayList<Customer> custList = (ArrayList<Customer>) getAllCustomer();
+		boolean flag = false;
+		for(int i=0; i<custList.size(); i++){
+			if(custList.get(i).getCustName().equals(cust.getCustName())){
+				flag = true;
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
+			if(!flag){
+				try {
+					st = getStatment();
+					if (st != null) {
+						st.execute(SQLConstantsQuery.INSERT_INTO_CUSTOMER_VALUES + "(" + cust.getId() + ",'"
+								+ cust.getCustName() + "','" + cust.getPassword() + "');");
+						System.out.println("Customer " + cust.getCustName() + " was created");
+						st.close();
+					}
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}else{
+				try {
+					throw new ProjectException("The Customer " + cust.getCustName() + " already exist.");
+				} catch (ProjectException e) {
+					e.printStackTrace();
+				}
+			}
+		
+		
 	}
 
 	@Override
@@ -53,8 +69,9 @@ public class CustomerDBDAO implements CustomerDAO {
 		try {
 			st = getStatment();
 			if (st != null) {
-				st.execute(SQLConstantsQuery.REMOVE_CUSTOMER + cust.getId());
+				st.execute(SQLConstantsQuery.REMOVE_CUSTOMER + cust.getCustName() + "'");
 				System.out.println("The Customer " + cust.getCustName() + " removed");
+				st.close();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -63,22 +80,30 @@ public class CustomerDBDAO implements CustomerDAO {
 
 	@Override
 	public void updateCustomer(Customer cust) {
-		Customer customer = getCustomer((int) cust.getId());
-		if (customer.getId() == cust.getId()) {
-			customer.setId(cust.getId());
-			customer.setCustName(cust.getCustName());
-			customer.setPassword(cust.getPassword());
+		ArrayList<Customer> allCustomers = new ArrayList<>();
+		boolean flag = false;
+		allCustomers = (ArrayList<Customer>) getAllCustomer();
+		for (int i = 0; i < allCustomers.size(); i++) {
+			if (cust.getCustName().equals(allCustomers.get(i).getCustName())) {
+				flag = true;
+			}
+		}
+		Statement st;
+		if (flag) {
 			try {
-				getStatment().execute(SQLConstantsQuery.UPDATE_CUSTOMER_SET + customer.getId() + ", CUST_NAME = '"
-						+ customer.getCustName() + "', PASSWORD = '" + customer.getPassword() + "' WHERE ID = "
-						+ customer.getId());
-				System.out.println("The Customer " + customer.getCustName() + " was updated");
+				st = getStatment();
+				if (st != null) {
+					st.execute(SQLConstantsQuery.UPDATE_CUSTOMER_SET + cust.getId() + ", PASSWORD = '" + cust.getPassword() + "' WHERE CUST_NAME = '"
+							+ cust.getCustName() + "'");
+					System.out.println("The Customer " + cust.getCustName() + " was updated");
+				}
+				st.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		} else {
 			try {
-				throw new ProjectException("The Customer is not exist. You can add the Customer to DB.");
+				throw new ProjectException("The Customer " + cust.getCustName() + "is already exist.");
 			} catch (ProjectException e) {
 				e.printStackTrace();
 				e.getMessage();
@@ -89,18 +114,44 @@ public class CustomerDBDAO implements CustomerDAO {
 	@Override
 	public Customer getCustomer(long id) {
 		Customer customer = new Customer();
-		ResultSet rs;
+		ResultSet rsCust = null;
+		ResultSet rsCoup = null;
 		Statement st;
+		ArrayList<Coupon> coupons = new ArrayList<>();
+		String typeFromDB;
 		try {
 			st = getStatment();
 			if (st != null) {
-				rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_ID + id);
-				while (rs.next()) {
-					customer.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
-					customer.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME).trim());
-					customer.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim());
+				rsCust = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_ID + id);
+				while (rsCust.next()) {
+					customer.setId(rsCust.getLong(SQLConstantsQuery.CUSTOMER_ID));
+					customer.setCustName(rsCust.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME).trim());
+					customer.setPassword(rsCust.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim());
 				}
+				rsCoup = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_COUPONS + id + ")");
+				while(rsCoup.next()){
+					Coupon coupon = new Coupon();
+					coupon.setId(rsCoup.getLong(SQLConstantsQuery.ID));
+					coupon.setTitle(rsCoup.getString(SQLConstantsQuery.COUPON_TITLE).trim());
+					coupon.setStartDate(rsCoup.getDate(SQLConstantsQuery.COUPON_START_DATE));
+					coupon.setEndDate(rsCoup.getDate(SQLConstantsQuery.COUPON_END_DATE));
+					coupon.setAmount(rsCoup.getInt(SQLConstantsQuery.COUPON_AMOUNT));
+					typeFromDB = rsCoup.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+					for (CouponType ct : CouponType.values()) {
+						if (typeFromDB.equals(ct.toString())) {
+							coupon.setType(ct);
+						}
+					}
+					coupon.setMessage(rsCoup.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
+					coupon.setPrice(rsCoup.getDouble(SQLConstantsQuery.COUPON_PRICE));
+					coupon.setImage(rsCoup.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
+					coupons.add(coupon);
+				}
+				customer.setCoupons(coupons);
 			}
+			rsCust.close();
+			rsCoup.close();
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -109,21 +160,50 @@ public class CustomerDBDAO implements CustomerDAO {
 
 	@Override
 	public Collection<Customer> getAllCustomer() {
-		ResultSet rs;
+		ResultSet rs = null;
+		ResultSet rsCoup = null;
 		ArrayList<Customer> customerList = new ArrayList<>();
+		ArrayList<Coupon> coupons;
 		Statement st;
+		Statement stCoup;
+		String typeFromDB;
 		try {
 			st = getStatment();
 			if (st != null) {
 				rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_CUSTOMERS);
 				while (rs.next()) {
+					coupons = new ArrayList<>();
 					Customer cust = new Customer();
 					cust.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
 					cust.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME).trim());
 					cust.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim());
+					stCoup = getStatment();
+					rsCoup = stCoup.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_COUPONS + cust.getId() + ")");
+					while(rsCoup.next()){
+						Coupon coupon = new Coupon();
+						coupon.setId(rsCoup.getLong(SQLConstantsQuery.ID));
+						coupon.setTitle(rsCoup.getString(SQLConstantsQuery.COUPON_TITLE).trim());
+						coupon.setStartDate(rsCoup.getDate(SQLConstantsQuery.COUPON_START_DATE));
+						coupon.setEndDate(rsCoup.getDate(SQLConstantsQuery.COUPON_END_DATE));
+						coupon.setAmount(rsCoup.getInt(SQLConstantsQuery.COUPON_AMOUNT));
+						typeFromDB = rsCoup.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+						for (CouponType ct : CouponType.values()) {
+							if (typeFromDB.equals(ct.toString())) {
+								coupon.setType(ct);
+							}
+						}
+						coupon.setMessage(rsCoup.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
+						coupon.setPrice(rsCoup.getDouble(SQLConstantsQuery.COUPON_PRICE));
+						coupon.setImage(rsCoup.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
+						coupons.add(coupon);
+					}
+					cust.setCoupons(coupons);
 					customerList.add(cust);
 				}
 			}
+			rsCoup.close();
+			rs.close();
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -132,7 +212,7 @@ public class CustomerDBDAO implements CustomerDAO {
 
 	@Override
 	public List<Coupon> getCoupons() {
-		ResultSet rs;
+		ResultSet rs = null;
 		ArrayList<Coupon> customerList = new ArrayList<>();
 		Statement st;
 		String typeFromDB;
@@ -148,14 +228,19 @@ public class CustomerDBDAO implements CustomerDAO {
 					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
 					coupon.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
 					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE).trim();
-					CouponType ct = CouponType.valueOf(typeFromDB.toUpperCase(Locale.ENGLISH));
-					coupon.setType(ct);
+					for (CouponType ct : CouponType.values()) {
+						if (typeFromDB.equals(ct.toString())) {
+							coupon.setType(ct);
+						}
+					}
 					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
-					coupon.setPrice(rs.getFloat(SQLConstantsQuery.COUPON_PRICE));
+					coupon.setPrice(rs.getDouble(SQLConstantsQuery.COUPON_PRICE));
 					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
 					customerList.add(coupon);
 				}
 			}
+			rs.close();
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -163,20 +248,22 @@ public class CustomerDBDAO implements CustomerDAO {
 	}
 
 	@Override
-	public boolean login(String custName, int password) {
-		ResultSet rs;
+	public boolean login(String custName, String password) {
+		ResultSet rs = null;
 		Statement st;
 		try {
 			st = getStatment();
 			if (st != null) {
 				rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_PASSWORD_BY_NAME + "'" + custName + "'");
 				while (rs.next()) {
-					if (password == rs.getInt(SQLConstantsQuery.CUSTOMER_PASSWORD)) {
-						System.out.println("Login success.");
+					if (password.equals(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim())) {
+						System.out.println("Customer login success.");
 						return true;
 					}
 				}
 			}
+			rs.close();
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

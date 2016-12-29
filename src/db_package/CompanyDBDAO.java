@@ -15,8 +15,6 @@ import util.SQLConstantsQuery;
 
 public class CompanyDBDAO implements CompanyDAO {
 
-	private ConnectionPool pool;
-
 	public CompanyDBDAO() {
 
 	}
@@ -24,7 +22,7 @@ public class CompanyDBDAO implements CompanyDAO {
 	private Statement getStatment() {
 		Connection con = null;
 		Statement st = null;
-		con = pool.getInstance().getConnection();
+		con = ConnectionPool.getInstance().getConnection();
 		try {
 			st = con.createStatement();
 		} catch (SQLException e) {
@@ -39,11 +37,23 @@ public class CompanyDBDAO implements CompanyDAO {
 		try {
 			st = getStatment();
 			if (st != null) {
+				List<Company> allCopmanys = (List<Company>) getAllCompanies();
+				boolean flag = false;
+				for(int i=0; i<allCopmanys.size(); i++){
+					if(comp.getCompName().equalsIgnoreCase(allCopmanys.get(i).getCompName())){
+						flag = true;
+					}
+				}
+				if(!flag){
 				st.execute(SQLConstantsQuery.INSERT_INTO_COMPANY_VALUES + "(" + comp.getId() + ",'" + comp.getCompName()
 						+ "','" + comp.getPassword() + "','" + comp.getEmail() + "');");
-				System.out.println("Company " + comp.getCompName() + " added to DB");
+				System.out.println("Company " + comp.getCompName() + " was created");
+				}else{
+					throw new ProjectException("Can't create " + comp.getCompName() + " company, because is already exist.");
+				}
 			}
-		} catch (SQLException e) {
+			st.close();
+		} catch (SQLException | ProjectException e) {
 			e.printStackTrace();
 		}
 	}
@@ -54,9 +64,13 @@ public class CompanyDBDAO implements CompanyDAO {
 		try {
 			st = getStatment();
 			if (st != null) {
+				st.execute(SQLConstantsQuery.REMOVE_COMPANY_COUPONS + comp.getId() + ")");
+				st.execute(SQLConstantsQuery.REMOVE_FROM_CUSTOMER_COUPONS + comp.getId() + ")");
+				st.execute(SQLConstantsQuery.REMOVE_FROM_COMPANY_COUPONS + comp.getId());
 				st.execute(SQLConstantsQuery.REMOVE_COMPANY + comp.getId());
 				System.out.println("The Company " + comp.getCompName() + " removed");
 			}
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -68,23 +82,30 @@ public class CompanyDBDAO implements CompanyDAO {
 	 */
 	@Override
 	public void updateCompany(Company comp) {
-		Company company = getCompany((int) comp.getId());
-		if (company.getId() == comp.getId()) {
-			company.setId(comp.getId());
-			company.setCompName(comp.getCompName());
-			company.setPassword(comp.getPassword());
-			company.setEmail(comp.getEmail());
+		ArrayList<Company> allCompanys = new ArrayList<>();
+		boolean flag = false;
+		allCompanys = (ArrayList<Company>) getAllCompanies();
+		for (int i = 0; i < allCompanys.size(); i++) {
+			if (comp.getCompName().equals(allCompanys.get(i).getCompName())) {
+				flag = true;
+			}
+		}
+		Statement st;
+		if (flag) {
 			try {
-				getStatment().execute(SQLConstantsQuery.UPDATE_COMPANY_SET + company.getId() + ", COMP_NAME = '"
-						+ company.getCompName() + "', PASSWORD = '" + company.getPassword() + "', EMAIL = '"
-						+ company.getEmail() + "' WHERE ID = " + company.getId());
-				System.out.println("The Company " + company.getCompName() + " was updated");
+				st = getStatment();
+				if (st != null) {
+					st.execute(SQLConstantsQuery.UPDATE_COMPANY_SET + comp.getId() + ", PASSWORD = '"
+							+ comp.getPassword() + "', EMAIL = '" + comp.getEmail() + "' WHERE COMP_NAME = '" + comp.getCompName() + "'");
+					System.out.println("The Company " + comp.getCompName() + " was updated");
+				}
+				st.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		} else {
 			try {
-				throw new ProjectException("The Company is not exist. You can add this Company to DB.");
+				throw new ProjectException("The Company is not exist. You can created this Company.");
 			} catch (ProjectException e) {
 				e.printStackTrace();
 				e.getMessage();
@@ -95,12 +116,13 @@ public class CompanyDBDAO implements CompanyDAO {
 	@Override
 	public Company getCompany(long l) {
 		Company company = new Company();
-		ResultSet rs;
+		ResultSet rs = null;
 		Statement st;
 		try {
 			st = getStatment();
 			if (st != null) {
 				rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_BY_ID + l);
+				company.setCompName(SQLConstantsQuery.EMPTY);
 				while (rs.next()) {
 					company.setId(rs.getLong(SQLConstantsQuery.COMPANY_ID));
 					company.setCompName(rs.getString(SQLConstantsQuery.COMPANY_COMP_NAME).trim());
@@ -108,6 +130,8 @@ public class CompanyDBDAO implements CompanyDAO {
 					company.setEmail(rs.getString(SQLConstantsQuery.COMPANY_EMAIL).trim());
 				}
 			}
+			rs.close();
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -116,7 +140,7 @@ public class CompanyDBDAO implements CompanyDAO {
 
 	@Override
 	public Collection<Company> getAllCompanies() {
-		ResultSet rs;
+		ResultSet rs = null;
 		ArrayList<Company> companyList = new ArrayList<>();
 		Statement st;
 		try {
@@ -132,6 +156,8 @@ public class CompanyDBDAO implements CompanyDAO {
 					companyList.add(comp);
 				}
 			}
+			rs.close();
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -140,7 +166,7 @@ public class CompanyDBDAO implements CompanyDAO {
 
 	@Override
 	public List<Coupon> getCoupons() {
-		ResultSet rs;
+		ResultSet rs = null;
 		ArrayList<Coupon> couponList = new ArrayList<>();
 		Statement st;
 		String typeFromDB;
@@ -164,6 +190,8 @@ public class CompanyDBDAO implements CompanyDAO {
 					couponList.add(coupon);
 				}
 			}
+			rs.close();
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -171,20 +199,22 @@ public class CompanyDBDAO implements CompanyDAO {
 	}
 
 	@Override
-	public boolean login(String compName, int password) {
-		ResultSet rs;
+	public boolean login(String compName, String password) {
+		ResultSet rs = null;
 		Statement st;
 		try {
 			st = getStatment();
 			if (st != null) {
 				rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_PASSWORD_BY_NAME + "'" + compName + "'");
 				while (rs.next()) {
-					if (password == rs.getInt(SQLConstantsQuery.COMPANY_PASSWORD)) {
-						System.out.println("Login success.");
+					if (password.equals(rs.getString(SQLConstantsQuery.COMPANY_PASSWORD).trim())) {
+						System.out.println("Company login success.");
 						return true;
 					}
 				}
 			}
+			rs.close();
+			st.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

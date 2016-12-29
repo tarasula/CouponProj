@@ -5,6 +5,7 @@ public class SQLConstantsQuery {
 	/*
 	 * Company constants
 	 */
+	public static final String EMPTY = "";
 	public static final String COMPANY_ID = "ID";
 	public static final String COMPANY_COMP_NAME = "COMP_NAME";
 	public static final String COMPANY_PASSWORD = "PASSWORD";
@@ -27,11 +28,13 @@ public class SQLConstantsQuery {
 	public static final String UPDATE_CUSTOMER_SET = "UPDATE Customer SET ID = ";
 	public static final String SELECT_CUSTOMER_BY_ID = "SELECT * FROM Customer WHERE ID = ";
 	public static final String SELECT_ALL_CUSTOMERS = "SELECT * FROM Customer";
-	public static final String REMOVE_CUSTOMER = "DELETE FROM Customer WHERE ID = ";
+	public static final String REMOVE_CUSTOMER = "DELETE FROM Customer WHERE CUST_NAME = '";
 	public static final String SELECT_CUSTOMER_PASSWORD_BY_NAME = "SELECT PASSWORD FROM Customer WHERE CUST_NAME = ";
 	public static final String SELECT_ALL_CUSTOMER_COUPONS = "select coup.ID, coup.TITLE, coup.START_DATE,coup.END_DATE, coup.AMOUNT,coup.TYPE,coup.MESSAGE,coup.PRICE,coup.IMAGE from Customer_Coupon cust INNER JOIN "
 			+ "Coupon coup ON cust.COUPON_ID = coup.id and cust.CUST_ID = (SELECT ID FROM Customer WHERE CUST_NAME = ";
 	public static final String SELECT_CUSTOMER_ID_BY_NAME = "SELECT ID FROM Customer WHERE CUST_NAME = ";
+	public static final String SELECT_CUSTOMER_COUPONS = "select * from Coupon where ID IN (select Customer_Coupon.COUPON_ID from Customer_Coupon where CUST_ID = "; 
+	public static final String REMOVE_FROM_CUSTOMER_COUPONS = "delete Customer_Coupon from Customer_Coupon where COUPON_ID IN(select Company_Coupon.COUPON_ID from Company_Coupon where COMP_ID = ";
 	/*
 	 * Coupon constants
 	 */
@@ -44,15 +47,18 @@ public class SQLConstantsQuery {
 	public static final String COUPON_MESSAGE = "MESSAGE";
 	public static final String COUPON_PRICE = "PRICE";
 	public static final String COUPON_IMAGE = "IMAGE";
-//	public static final String CUSTOMER_PASSWORD = "PASSWORD";
+	public static final String SELECT_AMOUNT_FROM_COUPON = "select AMOUNT, END_DATE from Coupon where ID = ";
 	public static final String INSERT_INTO_COUPON_VALUES = "INSERT INTO Coupon VALUES ";
-	public static final String UPDATE_COUPON_SET = "UPDATE Coupon SET ID = ";
+	public static final String UPDATE_COUPON_SET = "UPDATE Coupon SET END_DATE = '";
 	public static final String SELECT_COUPON_BY_ID = "SELECT * FROM Coupon WHERE ID = ";
 	public static final String SELECT_ALL_COUPONS = "SELECT * FROM Coupon";
 	public static final String SELECT_ALL_COUPONS_BY_TYPE = "SELECT * FROM Coupon WHERE TYPE = '";
-	
+	public static final String REMOVE_COMPANY_COUPONS = "delete Coupon from Coupon where ID IN (select Company_Coupon.COUPON_ID from Company_Coupon where COMP_ID = ";
+	public static final String REMOVE_FROM_COMPANY_COUPONS = "delete Company_Coupon from Company_Coupon where COMP_ID = ";
 	public static final String REMOVE_COUPON = "DELETE FROM Coupon WHERE ID = ";
-	public static final String SELECT_TYPES_OF_COUPONS = "select TYPE from Coupon";
+	public static final String SELECT_TITLE_OF_COUPONS = "select TITLE from Coupon";
+	public static final String UPDATE_AMOUNT_IN_COUPON = "update Coupon set amount = (select Coupon.AMOUNT from coupon where ID = ?) - 1 where ID = ?;";
+	
 	
 	
 	/*
@@ -61,8 +67,11 @@ public class SQLConstantsQuery {
 	public static final String INSERT_INTO_CUSTOMER_COUPON_VALUES = "INSERT INTO Customer_Coupon VALUES ";
 	public static final String INSERT_INTO_COMPANY_COUPON_VALUES = "INSERT INTO Company_Coupon VALUES ";
 	public static final String DELETE_FROM_COMPANY_COUPON = "DELETE FROM Company_Coupon WHERE COUPON_ID = ";
+	public static final String DELETE_FROM_CUSTOMER_COUPON = "DELETE FROM Customer_Coupon WHERE COUPON_ID = ";
 	public static final String SELECT_COUPON_ID = "SELECT COUPON_ID FROM Company_Coupon WHERE COMP_ID = (SELECT ID FROM Company WHERE COMP_NAME = ";
 	public static final String COUPON_ID = "COUPON_ID";
 	public static final String SELECT_COUPONS_BY_TYPE = "select * from Coupon where Coupon.ID IN (select Company_Coupon.COUPON_ID from Company_Coupon where Company_Coupon.COMP_ID = (select Company.ID from Company where Company.COMP_NAME = 'Ness')) and Coupon.TYPE = ;"; 
 	public static final String SELECT_END_DATE_OF_COUPONS = "select ID, TITLE, END_DATE from Coupon";
+	public static final String SELECT_COUPON_ID_FROM_CUSTOMER_COUPON = "select Customer_Coupon.COUPON_ID from Customer_Coupon where CUST_ID = ";
+	
 }

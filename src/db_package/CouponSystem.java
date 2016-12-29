@@ -31,7 +31,7 @@ public class CouponSystem {
 		return instance;
 	}
 
-	public CouponClientFacade login(String name, int password, String type) {
+	public CouponClientFacade login(String name, String password, String type) {
 		if (type.equalsIgnoreCase("ADMIN") || type.equalsIgnoreCase("ADMINISTRATOR")) {
 			adminFacade = new AdminFacade();
 			return adminFacade.login(name, password, type);

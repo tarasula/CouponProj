@@ -13,6 +13,7 @@ public class CompanyFacade implements CouponClientFacade {
 	private CouponDBDAO couponDAO;
 	private CompanyDBDAO companyDAO;
 	private static String companyName;
+	//= "Ness"
 
 	public CompanyFacade() {
 		couponDAO = new CouponDBDAO();
@@ -43,7 +44,7 @@ public class CompanyFacade implements CouponClientFacade {
 		ArrayList<Coupon> couponByType = new ArrayList<>();
 		ArrayList<Coupon> allCoupons = (ArrayList<Coupon>) companyDAO.getCoupons();
 		for (int i = 0; i < allCoupons.size(); i++) {
-			if (allCoupons.get(i).getType().toString().equals(coupType)) {
+			if (allCoupons.get(i).getType().toString().trim().equals(coupType.toString().trim())) {
 				couponByType.add(allCoupons.get(i));
 			}
 		}
@@ -59,10 +60,10 @@ public class CompanyFacade implements CouponClientFacade {
 	}
 
 	@Override
-	public CouponClientFacade login(String name, int password, String clienType) {
+	public CouponClientFacade login(String name, String password, String clienType) {
 		CompanyFacade.setCompanyName(name);
 		if (companyDAO.login(name, password)) {
-			return (CouponClientFacade) companyDAO;
+			return this;
 		}
 		return null;
 	}

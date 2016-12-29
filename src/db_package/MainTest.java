@@ -1,144 +1,87 @@
 package db_package;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.Scanner;
 
-import util.SQLConstantsQuery;
+import facade.AdminFacade;
+import facade.CompanyFacade;
+import facade.CustomerFacade;
 
-public class MainTest{
+public class MainTest {
 
 	public static void main(String[] args) throws ParseException, SQLException {
 
-		ConnectionPool.getInstance().getConnection();
+		 Thread t1 = new Thread(new DailyCouponExpirationTask());
+		 t1.start();
 
-		
-//		CustomerDBDAO c1 = new CustomerDBDAO();
-//		Customer cos = new Customer(19, "Shlomi", "666");
-//		c1.createCustomer(cos);
-//		c1.removeCustomer(cos);
-//		c1.updateCustomer(cos);
-//		System.out.println(c1.getCustomer(cos.getId()));
-//		ArrayList<Customer> list = (ArrayList) c1.getAllCustomer();
-//		checkList(list);
-//		c1.login("Andrey", 665);
-		
-//		CompanyDBDAO c2 = new CompanyDBDAO();
-//		Company com = new Company(2, "Andrey", "131", "email1");
-//		checkList(c2.getCoupons());
-//		c2.createCompany(com);
-//		c2.removeCompany(com);
-//		c2.updateCompany(com);
-//		System.out.println(c2.getCompany(com.getId()));
-//		ArrayList<Company> list = (ArrayList) c2.getAllCompanies();
-//		checkList(list);
-//		c2.login("Andrey", 131);
-//		checkList();
-		
-//		SimpleDateFormat dt = new SimpleDateFormat("yyyyy-mm-dd hh:mm:ss"); 
-		
-		Connection con;
-		Statement st;
-		ResultSet rs;
-		con = ConnectionPool.getInstance().getConnection();
-		try {
-			st = con.createStatement();
-			rs = st.executeQuery(SQLConstantsQuery.SELECT_END_DATE_OF_COUPONS);
-			while(rs.next()){
-				System.out.println(rs.getDate("END_DATE"));
-//				System.out.println(rs.getInt("ID"));
-//				System.out.println(rs.getString("TITLE"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-//		Calendar calendar = Calendar.getInstance();
-//		Date date2 = calendar.getTime();
-//		System.out.println(date2);
-//		CouponDBDAO c = new CouponDBDAO();
-//		Coupon coupon = new Coupon(2, "title2", "message2", "image", 3.4, new Date(2012,1,1), new Date(2013,2,2), 123, CouponType.FOOD);
-//		Coupon coupon = new Coupon(2, "title17", "message17", "17", 44.2, "2015-11-23", "2015-12-23", 7732, CouponType.HEALTH);
-		
-//		c.createCoupon(coupon);
-//		c.removeCoupon(coupon);
-//		c.updateCoupon(coupon);
-//		System.out.println(c.getCoupon(coupon.getId()));
-//		ArrayList<Coupon> list = (ArrayList) c.getAllCoupon();
-//		checkList(list);
-//		checkList(c.getCouponByType(CouponType.HEALTH));
-		
-		
-//		ResultSet rs;
-//		//Get Coupon by ID
-//		rs = c.getStatment().executeQuery(SQLConstantsQuery.SELECT_COUPON_BY_ID + 2 );
-//		while(rs.next()){
-//			//Get Coupon type
-//			String s = rs.getString(SQLConstantsQuery.COUPON_TYPE);
-//			System.out.println(s);
-//			for(CouponType cp : CouponType.values()){
-//				String str2 = cp.toString();
-//				System.out.println(str2);
-//				if(s.equals(str2))
-//					System.out.println(true);
+		CompanyFacade companyF = (CompanyFacade) CouponSystem.getInstance().login("Amdocs", "222", "Company");
+		 Coupon coupon = new Coupon(2, "new title2", "message67", "33", 9.2,
+		 "2015-11-23", "2018-12-23", 7732, CouponType.TREVELLING);
+//		 companyF.createCoupon(coupon);
+//		 companyF.removeCoupon(coupon);
+//		 companyF.updateCoupon(coupon);
+//		 checkList(companyF.getAllCoupons());//print price like - 44.20000023423472
+//		 System.out.println(companyF.getCoupon(8));
+//		 checkList(companyF.getCouponsByType(CouponType.TREVELLING));
+
+		CustomerFacade customerF = (CustomerFacade) CouponSystem.getInstance().login("Orlov", "998", "Customer");
+//		 Coupon coup = new Coupon(7, "title18", "message17", "13", 44.2,
+//		 "2015-11-23", "2015-12-23", 7732, CouponType.TREVELLING);
+//		 customerF.purchaseCoupon(coupon);
+//		 checkList(customerF.getAllPurchasedCoupons());
+//		 checkList(customerF.getAllPurchasedCouponsByPrice(44.2));
+//		 checkList(customerF.getAllPurchasedCouponsByType(CouponType.TREVELLING));
+
+		AdminFacade adminF = (AdminFacade) CouponSystem.getInstance().login("Admin", "1234", "Admin");
+		Company company = new Company(3, "Amdocs", "222", "amdocs@rambler.ru");
+//		 Company company = new Company(3, "Google", "ggg",
+//		 "google@rambler.ru");
+//		 adminF.createCompany(company);
+//		 adminF.removeCompany(company);
+//		 adminF.updateCompany(company);
+//		 System.out.println(adminF.getCompany(3));
+//		checkList(adminF.getAllCompanies());
+
+		Customer cost = new Customer(7, "Orlov", "998");
+//		Customer cost = new Customer(1, "Mark Zuckeberg", "bla");
+//		 adminF.createCustomer(cost);
+//		 adminF.removeCustomer(cost);
+//		 adminF.updateCustomer(cost);
+//		 System.out.println(adminF.getCustomer(0));
+//		 checkList(adminF.getAllCustomers());
+
+//		Scanner scan = new Scanner(System.in);
+//		while (true) {
+//			if (scan.hasNext()) {
+//				scan.nextLine().equals("exit");
+//				return;
 //			}
-//			System.out.println(false);
 //		}
-//		
-//		String str = CouponType.CAMPING.toString();
-//		for(CouponType cp : CouponType.values()){
-//			String str2 = cp.toString();
-//			if(str.equals(str2))
-//				System.out.println(true);
-//		}
-//		checkDates();
-	}
-	
-	public static void checkDates() {
-		String date_s = "2018-01-31";
-		SimpleDateFormat dt1 = new SimpleDateFormat("yyyy-mm-dd");
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		Calendar cal = Calendar.getInstance();
-		Date date = null, date2 = null;
-		try {
-			date = dt1.parse(date_s);
-			String dateStr = dateFormat.format(cal.getTime());
-			date2 = dt1.parse(dateStr);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
 
-		if (date.after(date2)) {
-			System.out.println(true);
-		} else {
-			System.out.println(false);
+	}
+
+	private static <E> void checkList(Collection<E> collection) {
+		for (int i = 0; i < collection.size(); i++) {
+			System.out.println(((List<E>) collection).get(i));
 		}
 	}
-	
-	private static void checkList(List<Coupon> list) {
-		for(int i=0; i<list.size(); i++){
-			System.out.print(list.get(i));
-		}
-	}
-	
+
 	// every night at 2am the task will be run
-	public void startDailyCouponExpirationTask(){
-		Calendar today = Calendar.getInstance();
-		today.set(Calendar.HOUR_OF_DAY, 2);
-		today.set(Calendar.MINUTE, 0);
-		today.set(Calendar.SECOND, 0);
-
-		Timer timer = new Timer();
-		Thread expirationThread = new Thread(new DailyCouponExpirationTask());
-//		timer.schedule(expirationThread, today.getTime());
-	}
+	// public void startDailyCouponExpirationTask(){
+	// Calendar today = Calendar.getInstance();
+	// today.set(Calendar.HOUR_OF_DAY, 2);
+	// today.set(Calendar.MINUTE, 0);
+	// today.set(Calendar.SECOND, 0);
+	//
+	// Timer timer = new Timer();
+	// Thread expirationThread = new Thread(new DailyCouponExpirationTask());
+	// timer.schedule(expirationThread, today.getTime());
+	// }
 }

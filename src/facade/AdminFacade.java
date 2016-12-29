@@ -14,7 +14,7 @@ public class AdminFacade implements CouponClientFacade {
 	private CompanyDBDAO companyDAO;
 	private CustomerDBDAO customerDAO;
 	private String ADMIN_NAME = "admin";
-	private int PASSWORD = 1234;
+	private String PASSWORD = "1234";
 
 	public AdminFacade() {
 		companyDAO = new CompanyDBDAO();
@@ -68,9 +68,10 @@ public class AdminFacade implements CouponClientFacade {
 	}
 
 	@Override
-	public CouponClientFacade login(String name, int password, String clienType) {
-		if (name.equalsIgnoreCase(ADMIN_NAME) && password == PASSWORD) {
-			return (CouponClientFacade) ConnectionPool.getInstance();
+	public CouponClientFacade login(String name, String password, String clienType) {
+		if (name.equalsIgnoreCase(ADMIN_NAME) && password.equalsIgnoreCase(PASSWORD)) {
+			System.out.println("Admin login success.");
+			return this;
 		}
 		try {
 			throw new ProjectException("Login failed...");
