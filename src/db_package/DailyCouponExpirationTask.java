@@ -2,23 +2,34 @@ package db_package;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import util.SQLConstantsQuery;
-
+/**
+ * This class that uses for expiration task that check every day, dates of coupons.
+ * @author  Andrey Orlov
+ * @version 1.0
+ * 
+ */
 public class DailyCouponExpirationTask implements Runnable {
 
+	/**Link to Coupon DAO-layer*/
 	private CouponDBDAO couponDAO;
-	private Object key = new Object();
+	
+	/**
+	 * Create object for speaking with DAO-layer
+	 */
 	public DailyCouponExpirationTask() {
 		couponDAO = new CouponDBDAO();		
 	}
 
+	/**
+	 * Method that check end dates of all coupons in DB, if coupon end date after current date, 
+	 * the specified coupon will be removed.
+	 */
 	@Override
 	public void run() {
 		Connection con;
@@ -37,27 +48,23 @@ public class DailyCouponExpirationTask implements Runnable {
 						Coupon couponForDelete = new Coupon();
 						couponForDelete.setId(rs.getInt(SQLConstantsQuery.ID));
 						couponForDelete.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE));
-//						couponForDelete.setAmount(0);
-//						couponForDelete.setImage("");
-//						couponForDelete.setEndDate(null);
-//						couponForDelete.setStartDate(null);
-//						couponForDelete.setType(null);
-//						couponForDelete.setMessage("");
-//						couponForDelete.setPrice(0);
 						couponDAO.removeCoupon(couponForDelete);
 					}
 				}
 				statement.close();
 				rs.close();
 				TimeUnit.DAYS.sleep(1);
-			} catch (SQLException | InterruptedException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
+				System.err.println(e.getMessage());
 			}
 		}
 	}
 
-	
+	/**
+	 * Method for stop expiration task
+	 */
 	public void stopTask(){
 		Thread.currentThread().interrupt();
+		System.out.println("Deily task is stopped.");
 	}
 }

@@ -4,8 +4,8 @@
 package db_package;
 
 /**
+ * Enum class use for Coupon class
  * @author Andrey Orlov
- *
  */
 public enum CouponType {
 	RESTURANS("RESTURANS"), 
@@ -16,27 +16,23 @@ public enum CouponType {
 	CAMPING("CAMPING"),
 	TREVELLING("TREVELLING");
 	
-	
+	/**Type field */
 	private String type;
 
+	/**
+	 * Create object constructor
+	 * @param type - Type of Coupon
+	 */
 	CouponType(String type) {
         this.type = type;
     }
 
-    public String type() {
+	/**
+	 * Get Type method
+	 * @return type of Coupon
+	 */
+    public String getType() {
         return type;
     }
-    
-    public static CouponType fromString(String text) {
-        if (text != null) {
-          for (CouponType b : CouponType .values()) {
-            if (text.equalsIgnoreCase(b.type())) {
-              return b;
-            }
-          }
-        }
-        return null;
-      }
-    
-    
+        
 }

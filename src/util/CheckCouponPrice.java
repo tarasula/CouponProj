@@ -1,7 +1,6 @@
 package util;
 
 import java.text.DecimalFormat;
-import java.util.Collection;
 import java.util.List;
 
 import db_package.Coupon;
