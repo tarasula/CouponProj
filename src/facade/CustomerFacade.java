@@ -4,12 +4,14 @@ package facade;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import db_package.ClientType;
 import db_package.Coupon;
 import db_package.CouponDBDAO;
 import db_package.CouponType;
 import db_package.CustomerDBDAO;
-import exceptions.ProjectException;
-import util.CheckCouponPrice;
+import exceptions.NoDataException;
+import exceptions.OverallException;
+import utils.CheckCouponPrice;
 /**
  * This class is Customer business-layer level that uses for speaking 
  * with Customer credentials with DAO-layer.
@@ -77,7 +79,7 @@ public class CustomerFacade implements CouponClientFacade {
 			}
 		}
 			if(purchasedCouponByType.isEmpty()){
-				throw new ProjectException("This user does not have purchased Coupon by this type.");
+				throw new NoDataException("This user does not have purchased Coupon by this type.");
 			}
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
@@ -86,9 +88,9 @@ public class CustomerFacade implements CouponClientFacade {
 	}
 
 	/**
-	 * Method for get all purchased Coupons by price
+	 * Method for get all purchased Coupons till spicified price
 	 * @param price - Coupon price
-	 * @return list of Coupon with specific price
+	 * @return list of Coupon till specific price
 	 */
 	public Collection<Coupon> getAllPurchasedCouponsByPrice(double price) {
 		int count = CheckCouponPrice.countOfNumersAfterPoint(price);
@@ -115,7 +117,7 @@ public class CustomerFacade implements CouponClientFacade {
 			}
 		}
 			if(purchasedCouponByPrice.isEmpty()){
-				throw new ProjectException("This user does not have purchased Coupon by this price.");
+				throw new NoDataException("This user does not have purchased Coupon by this price.");
 			}
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
@@ -147,7 +149,7 @@ public class CustomerFacade implements CouponClientFacade {
 	 * @return CustomerFacade Object
 	 */
 	@Override
-	public CouponClientFacade login(String name, String password, String clienType) {
+	public CouponClientFacade login(String name, String password, ClientType clienType) {
 		CustomerFacade.setCustomerName(name);
 		try {
 			if (customerDAO.login(name, password)) {

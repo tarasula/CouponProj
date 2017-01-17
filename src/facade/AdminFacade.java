@@ -2,11 +2,14 @@ package facade;
 
 import java.util.Collection;
 
+import db_package.ClientType;
 import db_package.Company;
 import db_package.CompanyDBDAO;
 import db_package.Customer;
 import db_package.CustomerDBDAO;
-import exceptions.ProjectException;
+import exceptions.LogInException;
+import exceptions.OverallException;
+import utils.AdminConstants;
 
 /**
  * This class is Administrator business-layer level that uses for speaking 
@@ -22,12 +25,6 @@ public class AdminFacade implements CouponClientFacade {
 	
 	/**Link to Customer DAO-layer*/
 	private CustomerDBDAO customerDAO;
-	
-	/**Field name for Administrator*/
-	private String ADMIN_NAME = "admin";
-	
-	/**Field password for Administrator*/
-	private String PASSWORD = "1234";
 
 	/**
 	 * Create objects for speaking with DAO-layer
@@ -171,14 +168,14 @@ public class AdminFacade implements CouponClientFacade {
 	 * @return AdminFacade Object
 	 */
 	@Override
-	public CouponClientFacade login(String name, String password, String clienType) {
-		if (name.equalsIgnoreCase(ADMIN_NAME) && password.equalsIgnoreCase(PASSWORD)) {
+	public CouponClientFacade login(String name, String password, ClientType clienType) {
+		if (name.equalsIgnoreCase(AdminConstants.ADMIN_NAME) && password.equalsIgnoreCase(AdminConstants.PASSWORD)) {
 			System.out.println("Admin login success.");
 			return this;
 		}
 		try {
-			throw new ProjectException("Login failed...");
-		} catch (ProjectException e) {
+			throw new LogInException(this);
+		} catch (LogInException e) {
 			System.err.println(e.getMessage());
 		}
 		return null;

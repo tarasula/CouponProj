@@ -7,7 +7,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import util.SQLConstantsQuery;
+import utils.CouponConstants;
+import utils.SQLQueries;
 /**
  * This class that uses for expiration task that check every day, dates of coupons.
  * @author  Andrey Orlov
@@ -22,7 +23,8 @@ public class DailyCouponExpirationTask implements Runnable {
 	/**
 	 * Create object for speaking with DAO-layer
 	 */
-	public DailyCouponExpirationTask() {
+	public DailyCouponExpirationTask() 
+	{
 		couponDAO = new CouponDBDAO();		
 	}
 
@@ -37,24 +39,31 @@ public class DailyCouponExpirationTask implements Runnable {
 		
 		Calendar calendar = Calendar.getInstance();
 		Date today = calendar.getTime();
-		con = ConnectionPool.getInstance().getConnection();
 		
-		while (true) {
-			try {
+		while (true) 
+		{
+			con = ConnectionPool.getInstance().getConnection();
+			try 
+			{
 				statement = con.createStatement();
-				ResultSet rs = statement.executeQuery(SQLConstantsQuery.SELECT_END_DATE_OF_COUPONS);
-				while (rs.next()) {
-					if (rs.getDate(SQLConstantsQuery.COUPON_END_DATE).before(today)) {
+				ResultSet rs = statement.executeQuery(SQLQueries.SELECT_END_DATE_OF_COUPONS);
+				while (rs.next()) 
+				{
+					if (rs.getDate(CouponConstants.COUPON_END_DATE).before(today)) 
+					{
 						Coupon couponForDelete = new Coupon();
-						couponForDelete.setId(rs.getInt(SQLConstantsQuery.ID));
-						couponForDelete.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE));
+						couponForDelete.setId(rs.getInt(CouponConstants.ID));
+						couponForDelete.setTitle(rs.getString(CouponConstants.COUPON_TITLE));
 						couponDAO.removeCoupon(couponForDelete);
 					}
 				}
 				statement.close();
 				rs.close();
+				ConnectionPool.getInstance().returnConnection(con);
 				TimeUnit.DAYS.sleep(1);
-			} catch (Exception e) {
+			} 
+			catch (Exception e) 
+			{
 				System.err.println(e.getMessage());
 			}
 		}
@@ -63,7 +72,8 @@ public class DailyCouponExpirationTask implements Runnable {
 	/**
 	 * Method for stop expiration task
 	 */
-	public void stopTask(){
+	public void stopTask()
+	{
 		Thread.currentThread().interrupt();
 		System.out.println("Deily task is stopped.");
 	}

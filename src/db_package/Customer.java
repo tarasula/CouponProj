@@ -55,7 +55,7 @@ public class Customer {
 	 * @param custName - for set Customer name
 	 */
 	public void setCustName(String custName) {
-		this.custName = custName;
+		this.custName = custName.trim();
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class Customer {
 	 * @param password - for set Customer password
 	 */
 	public void setPassword(String password) {
-		this.password = password;
+		this.password = password.trim();
 	}
 
 	/**

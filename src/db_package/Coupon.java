@@ -5,8 +5,8 @@ package db_package;
 
 import java.util.Date;
 
-import exceptions.ProjectException;
-import util.DateUtil;
+import exceptions.OverallException;
+import utils.DateUtils;
 
 /**
  * class for create Coupon 
@@ -70,7 +70,7 @@ public class Coupon {
 	 * @param title - for set Coupon title
 	 */
 	public void setTitle(String title) {
-		this.title = title;
+		this.title = title.trim();
 	}
 
 	/**
@@ -86,7 +86,7 @@ public class Coupon {
 	 * @param message - for set Coupon message
 	 */
 	public void setMessage(String message) {
-		this.message = message;
+		this.message = message.trim();
 	}
 
 	/**
@@ -102,7 +102,7 @@ public class Coupon {
 	 * @param image - for set Coupon image
 	 */
 	public void setImage(String image) {
-		this.image = image;
+		this.image = image.trim();
 	}
 
 	/**
@@ -148,13 +148,13 @@ public class Coupon {
 	/**
 	 * Set Coupon endDate method
 	 * @param endDate - for set Coupon endDate
-	 * @throws ProjectException 
+	 * @throws OverallException - The End Date of Coupon is expired!
 	 */
-	public void setEndDate(Date endDate) throws ProjectException {
-		if(!DateUtil.checkDates(endDate)){			
+	public void setEndDate(Date endDate) throws OverallException {
+		if(!DateUtils.checkDates(endDate)){			
 			this.endDate = endDate;
 		}else{
-			throw new ProjectException("The End Date of Coupon is expired!");
+			throw new OverallException("The End Date of Coupon is expired!");
 		}
 	}
 

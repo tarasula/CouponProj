@@ -1,6 +1,7 @@
 package db_package;
 
-import exceptions.ProjectException;
+import exceptions.LogInException;
+import exceptions.OverallException;
 import facade.AdminFacade;
 import facade.CompanyFacade;
 import facade.CouponClientFacade;
@@ -13,15 +14,6 @@ import facade.CustomerFacade;
 
 public class CouponSystem {
 
-	/**Link to Administrator Facade-layer*/
-	private AdminFacade adminFacade;
-	
-	/**Link to Company Facade-layer*/
-	private CompanyFacade companyFacade;
-	
-	/**Link to Customer Facade-layer*/
-	private CustomerFacade customerFacade;
-	
 	/**Link to Daily Coupon Expiration Task*/
 	private DailyCouponExpirationTask dceTask;
 
@@ -36,8 +28,8 @@ public class CouponSystem {
 	 */
 	private CouponSystem() {
 		 dceTask = new DailyCouponExpirationTask();
-		 Thread t1 = new Thread(new DailyCouponExpirationTask());
-		 t1.start();
+		 Thread dailyCouponExpirationTask = new Thread(new DailyCouponExpirationTask());
+		 dailyCouponExpirationTask.start();
 	}
 
 	/**
@@ -60,36 +52,45 @@ public class CouponSystem {
 	 * Method to login with some credentials
 	 * @param name - Name of client
 	 * @param password - Password of client
-	 * @param clienType - Type of client (Company, Customer, Administrator)
+	 * @param type - Type of client (Company, Customer, Administrator)
 	 * @return CouponClientFacade Object
 	 */
-	public CouponClientFacade login(String name, String password, String type) {
-		if (type.equalsIgnoreCase("ADMIN") || type.equalsIgnoreCase("ADMINISTRATOR")) {
-			adminFacade = new AdminFacade();
-			return adminFacade.login(name, password, type);
+	public CouponClientFacade login(String name, String password, ClientType type) {
+		CouponClientFacade resultFacade = null;
+		
+		switch(type){
 			
-		} else if (type.equalsIgnoreCase("COMPANY")) {
-			companyFacade = new CompanyFacade();
-			return companyFacade.login(name, password, type);
+		case ADMIN:
 			
-		} else if (type.equalsIgnoreCase("CUSTOMER")) {
-			customerFacade = new CustomerFacade();
-			return customerFacade.login(name, password, type);
+		case ADMINISTRATOR:
+			resultFacade = new AdminFacade(); 
+			break;
 			
-		} else {
+		case COMPANY:
+			resultFacade = new CompanyFacade(); 
+			break;
+			
+		case CUSTOMER: 
+			resultFacade = new CustomerFacade(); 
+			break;
+			
+		default:
 			try {
-				throw new ProjectException("Log in failed, incorrect user type!");
-			} catch (ProjectException e) {
+				throw new LogInException("Log in failed, incorrect user type!");
+			} catch (LogInException e) {
 				System.err.println(e.getMessage());
 			}
-			return null;
+			break;
 		}
+	
+			return resultFacade.login(name, password, type);	
 	}
 
 	/**
 	 * Method which close all connections, stop Daily task and shutdown the system
 	 */
 	public void shutdown() {
+		ConnectionPool.ifShutDownClicked = true;
 		ConnectionPool.getInstance().closeAllConnection();
 		dceTask.stopTask();
 	}

@@ -9,9 +9,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
-import exceptions.ProjectException;
+import exceptions.DuplicateDataException;
+import exceptions.LogInException;
+import exceptions.NoDataException;
+import exceptions.OverallException;
 import facade.CompanyFacade;
-import util.SQLConstantsQuery;
+import utils.CompanyConstants;
+import utils.CouponConstants;
+import utils.SQLQueries;
 /**
  * This class is Company DAO-layer that uses for speaking 
  * with DB and relevant tables.
@@ -42,7 +47,7 @@ public class CompanyDBDAO implements CompanyDAO {
 	 * Method for create Company in Company table in DB.
 	 * Checking if this (Company comp) exist in DB.
 	 * @param comp - Company object with filled fields
-	 * @exception - throw ProjectException
+	 * @exception  OverallException - Can't create company, already exist.
 	 */
 	@Override
 	public void createCompany(Company comp) throws Exception {
@@ -52,13 +57,13 @@ public class CompanyDBDAO implements CompanyDAO {
 			con = getConnection();
 			st = con.createStatement();
 			if (st != null) {
-				rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_BY_NAME + comp.getCompName() + "'" );
+				rs = st.executeQuery(SQLQueries.SELECT_COMPANY_BY_NAME + comp.getCompName() + "'" );
 				if(!rs.next()){
-					st.execute(SQLConstantsQuery.INSERT_INTO_COMPANY_VALUES + "(" + "'" + comp.getCompName()
+					st.execute(SQLQueries.INSERT_INTO_COMPANY_VALUES + "(" + "'" + comp.getCompName()
 							+ "','" + comp.getPassword() + "','" + comp.getEmail() + "');");
 					System.out.println("Company " + comp.getCompName() + " was created");
 				}else{
-					throw new ProjectException("Can't create " + comp.getCompName() + " company, because is already exist.");
+					throw new DuplicateDataException(comp);
 				}
 			}
 			st.close();
@@ -70,7 +75,7 @@ public class CompanyDBDAO implements CompanyDAO {
 	 * Method for remove Company from Company table in DB.
 	 * Firstly get all companies and check if this company is exist
 	 * @param comp - Company object with filled fields
-	 * @exception - throw ProjectException
+	 * @exception  OverallException - The Company is not exist
 	 */
 	@Override
 	public void removeCompany(Company comp) throws Exception {
@@ -80,16 +85,16 @@ public class CompanyDBDAO implements CompanyDAO {
 			con = getConnection();
 			st = con.createStatement();
 			if (st != null) {
-				rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_ID_BY_NAME + "'" + comp.getCompName() + "'");
+				rs = st.executeQuery(SQLQueries.SELECT_COMPANY_ID_BY_NAME + "'" + comp.getCompName() + "'");
 				if(rs.next()){
-					comp.setId(rs.getInt(SQLConstantsQuery.ID));
-					st.execute(SQLConstantsQuery.REMOVE_COMPANY_COUPONS + comp.getId() + ")");
-					st.execute(SQLConstantsQuery.REMOVE_FROM_CUSTOMER_COUPONS + comp.getId() + ")");
-					st.execute(SQLConstantsQuery.REMOVE_FROM_COMPANY_COUPONS + comp.getId());
-					st.execute(SQLConstantsQuery.REMOVE_COMPANY + comp.getId());
+					comp.setId(rs.getInt(CouponConstants.ID));
+					st.execute(SQLQueries.REMOVE_COMPANY_COUPONS + comp.getId() + ")");
+					st.execute(SQLQueries.REMOVE_FROM_CUSTOMER_COUPONS + comp.getId() + ")");
+					st.execute(SQLQueries.REMOVE_FROM_COMPANY_COUPONS + comp.getId());
+					st.execute(SQLQueries.REMOVE_COMPANY + comp.getId());
 					System.out.println("The Company " + comp.getCompName() + " removed");
 				}else{
-					throw new ProjectException("This Company is not exist.");
+					throw new NoDataException(comp);
 				}
 			}
 			st.close();
@@ -110,12 +115,12 @@ public class CompanyDBDAO implements CompanyDAO {
 		con = getConnection();
 		st = con.createStatement();
 		if (st != null) {
-			rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_ID_BY_NAME + "'" + comp.getCompName() + "'");
+			rs = st.executeQuery(SQLQueries.SELECT_COMPANY_ID_BY_NAME + "'" + comp.getCompName() + "'");
 				if (rs.next()) {
-					st.execute(SQLConstantsQuery.UPDATE_COMPANY_SET + "'" + comp.getPassword() + "', EMAIL = '" + comp.getEmail() + "' WHERE COMP_NAME = '" + comp.getCompName() + "'");
+					st.execute(SQLQueries.UPDATE_COMPANY_SET + "'" + comp.getPassword() + "', EMAIL = '" + comp.getEmail() + "' WHERE COMP_NAME = '" + comp.getCompName() + "'");
 					System.out.println("The Company " + comp.getCompName() + " was updated");
 				}else {
-					throw new ProjectException("The Company is not exist. You can created this Company.");
+					throw new NoDataException(comp);
 				}
 		}
 		st.close();
@@ -125,7 +130,7 @@ public class CompanyDBDAO implements CompanyDAO {
 
 	/**
 	 * Method for get Company by ID from Company table in DB.
-	 * @param id - Company ID 
+	 * @param l - Company ID 
 	 * @return Company object with filled fields
 	 */
 	@Override
@@ -139,32 +144,32 @@ public class CompanyDBDAO implements CompanyDAO {
 			con = getConnection();
 			st = con.createStatement();
 			if (st != null) {
-				rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_BY_ID + l);
-				company.setCompName(SQLConstantsQuery.EMPTY);
+				rs = st.executeQuery(SQLQueries.SELECT_COMPANY_BY_ID + l);
+				company.setCompName(CompanyConstants.EMPTY);
 				while (rs.next()) {
-					company.setId(rs.getLong(SQLConstantsQuery.COMPANY_ID));
-					company.setCompName(rs.getString(SQLConstantsQuery.COMPANY_COMP_NAME).trim());
-					company.setPassword(rs.getString(SQLConstantsQuery.COMPANY_PASSWORD).trim());
-					company.setEmail(rs.getString(SQLConstantsQuery.COMPANY_EMAIL).trim());
+					company.setId(rs.getLong(CompanyConstants.COMPANY_ID));
+					company.setCompName(rs.getString(CompanyConstants.COMPANY_COMP_NAME));
+					company.setPassword(rs.getString(CompanyConstants.COMPANY_PASSWORD));
+					company.setEmail(rs.getString(CompanyConstants.COMPANY_EMAIL));
 					
 				}
-				rsCoup = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_COUPONS + l + ")");
+				rsCoup = st.executeQuery(SQLQueries.SELECT_COMPANY_COUPONS + l + ")");
 				while(rsCoup.next()){
 					Coupon coupon = new Coupon();
-					coupon.setId(rsCoup.getLong(SQLConstantsQuery.ID));
-					coupon.setTitle(rsCoup.getString(SQLConstantsQuery.COUPON_TITLE).trim());
-					coupon.setStartDate(rsCoup.getDate(SQLConstantsQuery.COUPON_START_DATE));
-					coupon.setEndDate(rsCoup.getDate(SQLConstantsQuery.COUPON_END_DATE));
-					coupon.setAmount(rsCoup.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-					String typeFromDB = rsCoup.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+					coupon.setId(rsCoup.getLong(CouponConstants.ID));
+					coupon.setTitle(rsCoup.getString(CouponConstants.COUPON_TITLE));
+					coupon.setStartDate(rsCoup.getDate(CouponConstants.COUPON_START_DATE));
+					coupon.setEndDate(rsCoup.getDate(CouponConstants.COUPON_END_DATE));
+					coupon.setAmount(rsCoup.getInt(CouponConstants.COUPON_AMOUNT));
+					String typeFromDB = rsCoup.getString(CouponConstants.COUPON_TYPE);
 					for (CouponType ct : CouponType.values()) {
-						if (typeFromDB.equals(ct.toString())) {
+						if (typeFromDB.trim().equals(ct.toString())) {
 							coupon.setType(ct);
 						}
 					}
-					coupon.setMessage(rsCoup.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
-					coupon.setPrice(rsCoup.getDouble(SQLConstantsQuery.COUPON_PRICE));
-					coupon.setImage(rsCoup.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
+					coupon.setMessage(rsCoup.getString(CouponConstants.COUPON_MESSAGE));
+					coupon.setPrice(rsCoup.getDouble(CouponConstants.COUPON_PRICE));
+					coupon.setImage(rsCoup.getString(CouponConstants.COUPON_IMAGE));
 					coupons.add(coupon);
 				}
 				company.setCoupon(coupons);
@@ -193,7 +198,7 @@ public class CompanyDBDAO implements CompanyDAO {
 			con = getConnection();
 			st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			if (st != null) {
-				rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_COMPANIES);
+				rs = st.executeQuery(SQLQueries.SELECT_ALL_COMPANIES);
 				if(!rs.next()){
 					return companyList;
 				}
@@ -201,28 +206,28 @@ public class CompanyDBDAO implements CompanyDAO {
 				while (rs.next()) {
 					coupons = new ArrayList<>();
 					Company comp = new Company();
-					comp.setId(rs.getLong(SQLConstantsQuery.COMPANY_ID));
-					comp.setCompName(rs.getString(SQLConstantsQuery.COMPANY_COMP_NAME).trim());
-					comp.setPassword(rs.getString(SQLConstantsQuery.COMPANY_PASSWORD).trim());
-					comp.setEmail(rs.getString(SQLConstantsQuery.COMPANY_EMAIL).trim());
+					comp.setId(rs.getLong(CompanyConstants.COMPANY_ID));
+					comp.setCompName(rs.getString(CompanyConstants.COMPANY_COMP_NAME));
+					comp.setPassword(rs.getString(CompanyConstants.COMPANY_PASSWORD));
+					comp.setEmail(rs.getString(CompanyConstants.COMPANY_EMAIL));
 					stCoup = con.createStatement();
-					rsCoup = stCoup.executeQuery(SQLConstantsQuery.SELECT_COMPANY_COUPONS + comp.getId() + ")");
+					rsCoup = stCoup.executeQuery(SQLQueries.SELECT_COMPANY_COUPONS + comp.getId() + ")");
 					while(rsCoup.next()){
 						Coupon coupon = new Coupon();
-						coupon.setId(rsCoup.getLong(SQLConstantsQuery.ID));
-						coupon.setTitle(rsCoup.getString(SQLConstantsQuery.COUPON_TITLE).trim());
-						coupon.setStartDate(rsCoup.getDate(SQLConstantsQuery.COUPON_START_DATE));
-						coupon.setEndDate(rsCoup.getDate(SQLConstantsQuery.COUPON_END_DATE));
-						coupon.setAmount(rsCoup.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-						String typeFromDB = rsCoup.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+						coupon.setId(rsCoup.getLong(CouponConstants.ID));
+						coupon.setTitle(rsCoup.getString(CouponConstants.COUPON_TITLE));
+						coupon.setStartDate(rsCoup.getDate(CouponConstants.COUPON_START_DATE));
+						coupon.setEndDate(rsCoup.getDate(CouponConstants.COUPON_END_DATE));
+						coupon.setAmount(rsCoup.getInt(CouponConstants.COUPON_AMOUNT));
+						String typeFromDB = rsCoup.getString(CouponConstants.COUPON_TYPE);
 						for (CouponType ct : CouponType.values()) {
-							if (typeFromDB.equals(ct.toString())) {
+							if (typeFromDB.trim().equals(ct.toString())) {
 								coupon.setType(ct);
 							}
 						}
-						coupon.setMessage(rsCoup.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
-						coupon.setPrice(rsCoup.getDouble(SQLConstantsQuery.COUPON_PRICE));
-						coupon.setImage(rsCoup.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
+						coupon.setMessage(rsCoup.getString(CouponConstants.COUPON_MESSAGE));
+						coupon.setPrice(rsCoup.getDouble(CouponConstants.COUPON_PRICE));
+						coupon.setImage(rsCoup.getString(CouponConstants.COUPON_IMAGE));
 						coupons.add(coupon);
 					}
 					comp.setCoupon(coupons);
@@ -238,9 +243,10 @@ public class CompanyDBDAO implements CompanyDAO {
 	/**
 	 * Method for get all Coupon that Company was created.
 	 * @return Coupon list with filled fields
+	 * @throws NoDataException 
 	 */
 	@Override
-	public List<Coupon> getCoupons() throws ProjectException, SQLException {
+	public List<Coupon> getCoupons() throws OverallException, SQLException, NoDataException {
 		ResultSet rs = null;
 		ArrayList<Coupon> couponList = new ArrayList<>();
 		String typeFromDB;
@@ -249,27 +255,27 @@ public class CompanyDBDAO implements CompanyDAO {
 			con = getConnection();
 			stGetAll = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			if (stGetAll != null) {
-				rs = stGetAll.executeQuery(SQLConstantsQuery.SELECT_ALL_COMPANY_COUPONS + "'" + CompanyFacade.getCompanyName() + "')");
+				rs = stGetAll.executeQuery(SQLQueries.SELECT_ALL_COMPANY_COUPONS + "'" + CompanyFacade.getCompanyName() + "')");
 				if(!rs.next()){
 					if(couponList.isEmpty()){
-						throw new ProjectException("Company does not have Coupons!");
+						throw new NoDataException("Company does not have Coupons!");
 					}
 					return couponList;
 				}
 				rs.absolute(0);
 				while (rs.next()) {
 					Coupon coupon = new Coupon();
-					coupon.setId(rs.getLong(SQLConstantsQuery.ID));
-					coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
-					coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
-					coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
-					coupon.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-					typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE).trim();
-					CouponType ct = CouponType.valueOf(typeFromDB.toUpperCase(Locale.ENGLISH));
+					coupon.setId(rs.getLong(CouponConstants.ID));
+					coupon.setTitle(rs.getString(CouponConstants.COUPON_TITLE));
+					coupon.setStartDate(rs.getDate(CouponConstants.COUPON_START_DATE));
+					coupon.setEndDate(rs.getDate(CouponConstants.COUPON_END_DATE));
+					coupon.setAmount(rs.getInt(CouponConstants.COUPON_AMOUNT));
+					typeFromDB = rs.getString(CouponConstants.COUPON_TYPE);
+					CouponType ct = CouponType.valueOf(typeFromDB.trim().toUpperCase(Locale.ENGLISH));
 					coupon.setType(ct);
-					coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
-					coupon.setPrice(rs.getFloat(SQLConstantsQuery.COUPON_PRICE));
-					coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
+					coupon.setMessage(rs.getString(CouponConstants.COUPON_MESSAGE));
+					coupon.setPrice(rs.getFloat(CouponConstants.COUPON_PRICE));
+					coupon.setImage(rs.getString(CouponConstants.COUPON_IMAGE));
 					couponList.add(coupon);
 				}
 			}
@@ -282,10 +288,10 @@ public class CompanyDBDAO implements CompanyDAO {
 
 	/**
 	 * Method to login with Company credential
-	 * @param name - Company name
+	 * @param compName - Company name
 	 * @param password - Company password
 	 * @return CompanyFacade Object
-	 * @exception if log in faled
+	 * @exception  OverallException - if log in failed
 	 */
 	@Override
 	public boolean login(String compName, String password) throws Exception {
@@ -295,9 +301,9 @@ public class CompanyDBDAO implements CompanyDAO {
 			con = getConnection();
 			st = con.createStatement();
 			if (st != null) {
-				rs = st.executeQuery(SQLConstantsQuery.SELECT_COMPANY_PASSWORD_BY_NAME + "'" + compName + "'");
+				rs = st.executeQuery(SQLQueries.SELECT_COMPANY_PASSWORD_BY_NAME + "'" + compName + "'");
 				while (rs.next()) {
-					if (password.equals(rs.getString(SQLConstantsQuery.COMPANY_PASSWORD).trim())) {
+					if (password.equals(rs.getString(CompanyConstants.COMPANY_PASSWORD).trim())) {
 						System.out.println("Company login success.");
 						return true;
 					}
@@ -306,7 +312,7 @@ public class CompanyDBDAO implements CompanyDAO {
 			rs.close();
 			st.close();
 			ConnectionPool.getInstance().returnConnection(con);
-			throw new ProjectException("Company Login failed.");
+			throw new LogInException(this);
 	}
 
 }

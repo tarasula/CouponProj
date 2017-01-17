@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.omg.CORBA.INITIALIZE;
-
 public class ConnectionPool {
 
 	/**
@@ -32,6 +30,12 @@ public class ConnectionPool {
 	private Set<Connection> connections = new HashSet<>();
 	
 	/**
+	 * Count number of maximum connections
+	 */
+	private final int MAX_CONNECTIONS = 10;
+	
+	public static boolean ifShutDownClicked = false;
+	/**
 	 * Create object constructor
 	 */
 	private ConnectionPool() {}
@@ -54,9 +58,10 @@ public class ConnectionPool {
 	public Connection getConnection() {
 		Connection con = null;
 		try {
+			if(!ifShutDownClicked){
 			synchronized (key) {
 				while (true) {
-					if (connections.size() <= 10) {
+					if (connections.size() < MAX_CONNECTIONS) {
 						Class.forName(driverString);
 						con = DriverManager.getConnection(connectionUrl);
 						connections.add(con);
@@ -66,6 +71,10 @@ public class ConnectionPool {
 						key.wait();
 					}
 				}
+			}
+			}else{
+				System.out.println("The sysmet is in ShutDown state!");
+				return null;
 			}
 		} catch (SQLException | ClassNotFoundException | InterruptedException e) {
 			e.printStackTrace();
@@ -92,8 +101,12 @@ public class ConnectionPool {
 	/**
 	 * Close all connection method
 	 */
+	@SuppressWarnings("static-access")
 	public void closeAllConnection() {
 		try {
+			while(connections.size() <= MAX_CONNECTIONS){
+				Thread.currentThread().sleep(2000);
+			}
 			synchronized (key) {
 				for (Connection c : connections) {
 					c.close();
@@ -101,7 +114,7 @@ public class ConnectionPool {
 				key.notifyAll();
 				System.exit(0);
 			}
-		} catch (SQLException e) {
+		} catch (SQLException | InterruptedException e) {
 			e.printStackTrace();
 		}
 	}

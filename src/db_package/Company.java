@@ -57,7 +57,7 @@ public class Company {
 	 * @param compName - for set Company name
 	 */
 	public void setCompName(String compName) {
-		this.compName = compName;
+		this.compName = compName.trim();
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class Company {
 	 * @param password - for set Company password
 	 */
 	public void setPassword(String password) {
-		this.password = password;
+		this.password = password.trim();
 	}
 
 	/**
@@ -102,7 +102,7 @@ public class Company {
 
 	/**
 	 * Set Company Coupons method
-	 * @param coupons - for set Company coupons
+	 * @param coupon - for set Company coupons
 	 */
 	public void setCoupon(Collection<Coupon> coupon) {
 		this.coupon = coupon;

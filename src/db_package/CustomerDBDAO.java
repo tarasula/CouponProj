@@ -8,9 +8,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import exceptions.ProjectException;
+import exceptions.DuplicateDataException;
+import exceptions.LogInException;
+import exceptions.NoDataException;
+import exceptions.OverallException;
 import facade.CustomerFacade;
-import util.SQLConstantsQuery;
+import utils.CouponConstants;
+import utils.CustomerConstants;
+import utils.SQLQueries;
 
 /**
  * This class is Customer DAO-layer that uses for speaking with DB and relevant
@@ -45,8 +50,8 @@ public class CustomerDBDAO implements CustomerDAO {
 	 * 
 	 * @param cust
 	 *            - Customer object with filled fields
-	 * @exception -
-	 *                throw ProjectException
+	 * @exception 
+	 *                 OverallException - The Customer already exist.
 	 */
 	@Override
 	public void createCustomer(Customer cust) throws Exception {
@@ -57,9 +62,10 @@ public class CustomerDBDAO implements CustomerDAO {
 		con = getConnection();
 		st = con.createStatement();
 		if (st != null) {
-			rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_NAME + cust.getCustName() + "'");
+			rs = st.executeQuery(SQLQueries.SELECT_CUSTOMER_BY_NAME + cust.getCustName() + "'");
 			if (!rs.next()) {
-				prepSt = con.prepareStatement(SQLConstantsQuery.INSERT_INTO_CUSTOMER_VALUES,Statement.RETURN_GENERATED_KEYS);
+				prepSt = con.prepareStatement(SQLQueries.INSERT_INTO_CUSTOMER_VALUES,
+						Statement.RETURN_GENERATED_KEYS);
 				prepSt.setString(1, cust.getCustName());
 				prepSt.setString(2, cust.getPassword());
 				prepSt.executeUpdate();
@@ -72,7 +78,7 @@ public class CustomerDBDAO implements CustomerDAO {
 				}
 				System.out.println("Customer " + cust.getCustName() + " was created");
 			} else {
-				throw new ProjectException("The Customer " + cust.getCustName() + " already exist.");
+				throw new DuplicateDataException(cust);
 			}
 		}
 		prepSt.close();
@@ -87,8 +93,8 @@ public class CustomerDBDAO implements CustomerDAO {
 	 * 
 	 * @param cust
 	 *            - Customer object with filled fields
-	 * @exception -
-	 *                throw ProjectException
+	 * @exception
+	 *                OverallException - This Customer is not exist.
 	 */
 	@Override
 	public void removeCustomer(Customer cust) throws Exception {
@@ -98,12 +104,12 @@ public class CustomerDBDAO implements CustomerDAO {
 		con = getConnection();
 		st = con.createStatement();
 		if (st != null) {
-			rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_NAME + cust.getCustName() + "'");
+			rs = st.executeQuery(SQLQueries.SELECT_CUSTOMER_BY_NAME + cust.getCustName() + "'");
 			if (rs.next()) {
-				st.execute(SQLConstantsQuery.REMOVE_CUSTOMER + cust.getCustName() + "'");
+				st.execute(SQLQueries.REMOVE_CUSTOMER + cust.getCustName() + "'");
 				System.out.println("The Customer " + cust.getCustName() + " removed");
 			} else {
-				throw new ProjectException("This Customer is not exist.");
+				throw new NoDataException(cust);
 			}
 		}
 		st.close();
@@ -112,9 +118,11 @@ public class CustomerDBDAO implements CustomerDAO {
 	}
 
 	/**
-	 * Method for update Customer in Customer table in DB.
-	 * Firstly get all customers and check if this customer is exist
-	 * @param cust - Customer object with filled fields
+	 * Method for update Customer in Customer table in DB. Firstly get all
+	 * customers and check if this customer is exist
+	 * 
+	 * @param cust
+	 *            - Customer object with filled fields
 	 */
 	@Override
 	public void updateCustomer(Customer cust) throws Exception {
@@ -124,20 +132,20 @@ public class CustomerDBDAO implements CustomerDAO {
 		con = getConnection();
 		st = con.createStatement();
 		if (st != null) {
-			rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_NAME + cust.getCustName() + "'");
+			rs = st.executeQuery(SQLQueries.SELECT_CUSTOMER_BY_NAME + cust.getCustName() + "'");
 			if (rs.next()) {
-				st.execute(SQLConstantsQuery.UPDATE_CUSTOMER_SET + cust.getPassword() + "' WHERE CUST_NAME = '"
+				st.execute(SQLQueries.UPDATE_CUSTOMER_SET + cust.getPassword() + "' WHERE CUST_NAME = '"
 						+ cust.getCustName() + "'");
 				System.out.println("The Customer " + cust.getCustName() + " was updated");
 			} else {
-				throw new ProjectException("The Customer " + cust.getCustName() + "is does not exist.");
+				throw new NoDataException(cust);
 			}
 		}
 		st.close();
 		rs.close();
 		ConnectionPool.getInstance().returnConnection(con);
 	}
-		
+
 	/**
 	 * Method for get Customer by ID from Customer table in DB.
 	 * 
@@ -157,33 +165,33 @@ public class CustomerDBDAO implements CustomerDAO {
 		con = getConnection();
 		st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		if (st != null) {
-			rsCust = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_BY_ID + id);
+			rsCust = st.executeQuery(SQLQueries.SELECT_CUSTOMER_BY_ID + id);
 			if (!rsCust.next()) {
-				throw new ProjectException("Customer with ID - " + id + " is not exist.");
+				throw new NoDataException("Customer with ID - " + id + " is not exist.");
 			}
 			rsCust.absolute(0);
 			while (rsCust.next()) {
-				customer.setId(rsCust.getLong(SQLConstantsQuery.CUSTOMER_ID));
-				customer.setCustName(rsCust.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME).trim());
-				customer.setPassword(rsCust.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim());
+				customer.setId(rsCust.getLong(CustomerConstants.CUSTOMER_ID));
+				customer.setCustName(rsCust.getString(CustomerConstants.CUSTOMER_CUST_NAME));
+				customer.setPassword(rsCust.getString(CustomerConstants.CUSTOMER_PASSWORD));
 			}
-			rsCoup = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_COUPONS + id + ")");
+			rsCoup = st.executeQuery(SQLQueries.SELECT_CUSTOMER_COUPONS + id + ")");
 			while (rsCoup.next()) {
 				Coupon coupon = new Coupon();
-				coupon.setId(rsCoup.getLong(SQLConstantsQuery.ID));
-				coupon.setTitle(rsCoup.getString(SQLConstantsQuery.COUPON_TITLE).trim());
-				coupon.setStartDate(rsCoup.getDate(SQLConstantsQuery.COUPON_START_DATE));
-				coupon.setEndDate(rsCoup.getDate(SQLConstantsQuery.COUPON_END_DATE));
-				coupon.setAmount(rsCoup.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-				typeFromDB = rsCoup.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+				coupon.setId(rsCoup.getLong(CouponConstants.ID));
+				coupon.setStartDate(rsCoup.getDate(CouponConstants.COUPON_START_DATE));
+				coupon.setTitle(rsCoup.getString(CouponConstants.COUPON_TITLE));
+				coupon.setEndDate(rsCoup.getDate(CouponConstants.COUPON_END_DATE));
+				coupon.setAmount(rsCoup.getInt(CouponConstants.COUPON_AMOUNT));
+				typeFromDB = rsCoup.getString(CouponConstants.COUPON_TYPE);
 				for (CouponType ct : CouponType.values()) {
-					if (typeFromDB.equals(ct.toString())) {
+					if (typeFromDB.trim().equals(ct.toString())) {
 						coupon.setType(ct);
 					}
 				}
-				coupon.setMessage(rsCoup.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
-				coupon.setPrice(rsCoup.getDouble(SQLConstantsQuery.COUPON_PRICE));
-				coupon.setImage(rsCoup.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
+				coupon.setMessage(rsCoup.getString(CouponConstants.COUPON_MESSAGE));
+				coupon.setPrice(rsCoup.getDouble(CouponConstants.COUPON_PRICE));
+				coupon.setImage(rsCoup.getString(CouponConstants.COUPON_IMAGE));
 				coupons.add(coupon);
 			}
 			customer.setCoupons(coupons);
@@ -213,7 +221,7 @@ public class CustomerDBDAO implements CustomerDAO {
 		con = getConnection();
 		stGetAll = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		if (stGetAll != null) {
-			rs = stGetAll.executeQuery(SQLConstantsQuery.SELECT_ALL_CUSTOMERS);
+			rs = stGetAll.executeQuery(SQLQueries.SELECT_ALL_CUSTOMERS);
 			if (!rs.next()) {
 				return customerList;
 			}
@@ -221,27 +229,27 @@ public class CustomerDBDAO implements CustomerDAO {
 			while (rs.next()) {
 				coupons = new ArrayList<>();
 				Customer cust = new Customer();
-				cust.setId(rs.getLong(SQLConstantsQuery.CUSTOMER_ID));
-				cust.setCustName(rs.getString(SQLConstantsQuery.CUSTOMER_CUST_NAME).trim());
-				cust.setPassword(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim());
+				cust.setId(rs.getLong(CustomerConstants.CUSTOMER_ID));
+				cust.setCustName(rs.getString(CustomerConstants.CUSTOMER_CUST_NAME));
+				cust.setPassword(rs.getString(CustomerConstants.CUSTOMER_PASSWORD));
 				stCoup = con.createStatement();
-				rsCoup = stCoup.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_COUPONS + cust.getId() + ")");
+				rsCoup = stCoup.executeQuery(SQLQueries.SELECT_CUSTOMER_COUPONS + cust.getId() + ")");
 				while (rsCoup.next()) {
 					Coupon coupon = new Coupon();
-					coupon.setId(rsCoup.getLong(SQLConstantsQuery.ID));
-					coupon.setTitle(rsCoup.getString(SQLConstantsQuery.COUPON_TITLE).trim());
-					coupon.setStartDate(rsCoup.getDate(SQLConstantsQuery.COUPON_START_DATE));
-					coupon.setEndDate(rsCoup.getDate(SQLConstantsQuery.COUPON_END_DATE));
-					coupon.setAmount(rsCoup.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-					typeFromDB = rsCoup.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+					coupon.setId(rsCoup.getLong(CouponConstants.ID));
+					coupon.setTitle(rsCoup.getString(CouponConstants.COUPON_TITLE));
+					coupon.setStartDate(rsCoup.getDate(CouponConstants.COUPON_START_DATE));
+					coupon.setEndDate(rsCoup.getDate(CouponConstants.COUPON_END_DATE));
+					coupon.setAmount(rsCoup.getInt(CouponConstants.COUPON_AMOUNT));
+					typeFromDB = rsCoup.getString(CouponConstants.COUPON_TYPE);
 					for (CouponType ct : CouponType.values()) {
-						if (typeFromDB.equals(ct.toString())) {
+						if (typeFromDB.trim().equals(ct.toString())) {
 							coupon.setType(ct);
 						}
 					}
-					coupon.setMessage(rsCoup.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
-					coupon.setPrice(rsCoup.getDouble(SQLConstantsQuery.COUPON_PRICE));
-					coupon.setImage(rsCoup.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
+					coupon.setMessage(rsCoup.getString(CouponConstants.COUPON_MESSAGE));
+					coupon.setPrice(rsCoup.getDouble(CouponConstants.COUPON_PRICE));
+					coupon.setImage(rsCoup.getString(CouponConstants.COUPON_IMAGE));
 					coupons.add(coupon);
 				}
 				cust.setCoupons(coupons);
@@ -261,7 +269,7 @@ public class CustomerDBDAO implements CustomerDAO {
 	 * @return Coupon list with filled fields
 	 */
 	@Override
-	public List<Coupon> getCoupons() throws ProjectException, Exception {
+	public List<Coupon> getCoupons() throws OverallException, Exception {
 		ResultSet rs = null;
 		ArrayList<Coupon> customerList = new ArrayList<>();
 		Statement st;
@@ -270,31 +278,32 @@ public class CustomerDBDAO implements CustomerDAO {
 		con = getConnection();
 		st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		if (st != null) {
-			rs = st.executeQuery(SQLConstantsQuery.SELECT_ALL_CUSTOMER_COUPONS + "'" + CustomerFacade.getCustomerName() + "')");
-			if(!rs.next()){
-					throw new ProjectException("Customer does not have Coupons!");
+			rs = st.executeQuery(
+					SQLQueries.SELECT_ALL_CUSTOMER_COUPONS + "'" + CustomerFacade.getCustomerName() + "')");
+			if (!rs.next()) {
+				throw new NoDataException("Customer does not have Coupons!");
 			}
 			rs.absolute(0);
 			while (rs.next()) {
 				Coupon coupon = new Coupon();
-				coupon.setId(rs.getLong(SQLConstantsQuery.ID));
-				coupon.setTitle(rs.getString(SQLConstantsQuery.COUPON_TITLE).trim());
-				coupon.setStartDate(rs.getDate(SQLConstantsQuery.COUPON_START_DATE));
-				coupon.setEndDate(rs.getDate(SQLConstantsQuery.COUPON_END_DATE));
-				coupon.setAmount(rs.getInt(SQLConstantsQuery.COUPON_AMOUNT));
-				typeFromDB = rs.getString(SQLConstantsQuery.COUPON_TYPE).trim();
+				coupon.setId(rs.getLong(CouponConstants.ID));
+				coupon.setTitle(rs.getString(CouponConstants.COUPON_TITLE));
+				coupon.setStartDate(rs.getDate(CouponConstants.COUPON_START_DATE));
+				coupon.setEndDate(rs.getDate(CouponConstants.COUPON_END_DATE));
+				coupon.setAmount(rs.getInt(CouponConstants.COUPON_AMOUNT));
+				typeFromDB = rs.getString(CouponConstants.COUPON_TYPE);
 				for (CouponType ct : CouponType.values()) {
-					if (typeFromDB.equals(ct.toString())) {
+					if (typeFromDB.trim().equals(ct.toString())) {
 						coupon.setType(ct);
 					}
 				}
-				coupon.setMessage(rs.getString(SQLConstantsQuery.COUPON_MESSAGE).trim());
-				coupon.setPrice(rs.getDouble(SQLConstantsQuery.COUPON_PRICE));
-				coupon.setImage(rs.getString(SQLConstantsQuery.COUPON_IMAGE).trim());
+				coupon.setMessage(rs.getString(CouponConstants.COUPON_MESSAGE));
+				coupon.setPrice(rs.getDouble(CouponConstants.COUPON_PRICE));
+				coupon.setImage(rs.getString(CouponConstants.COUPON_IMAGE));
 				customerList.add(coupon);
 			}
 			if (customerList.isEmpty()) {
-				throw new ProjectException("This user does not have Coupons");
+				throw new NoDataException("This user does not have Coupons");
 			}
 		}
 		rs.close();
@@ -306,13 +315,13 @@ public class CustomerDBDAO implements CustomerDAO {
 	/**
 	 * Method to login with Customer credential
 	 * 
-	 * @param name
+	 * @param custName
 	 *            - Customer name
 	 * @param password
 	 *            - Customer password
 	 * @return true/false
-	 * @exception if
-	 *                log in failed
+	 * @exception 
+	 *                OverallException if log in failed
 	 */
 	@Override
 	public boolean login(String custName, String password) throws Exception {
@@ -322,9 +331,9 @@ public class CustomerDBDAO implements CustomerDAO {
 		con = getConnection();
 		st = con.createStatement();
 		if (st != null) {
-			rs = st.executeQuery(SQLConstantsQuery.SELECT_CUSTOMER_PASSWORD_BY_NAME + "'" + custName + "'");
+			rs = st.executeQuery(SQLQueries.SELECT_CUSTOMER_PASSWORD_BY_NAME + "'" + custName + "'");
 			while (rs.next()) {
-				if (password.equals(rs.getString(SQLConstantsQuery.CUSTOMER_PASSWORD).trim())) {
+				if (password.equals(rs.getString(CustomerConstants.CUSTOMER_PASSWORD).trim())) {
 					System.out.println("Customer login success.");
 					return true;
 				}
@@ -333,7 +342,7 @@ public class CustomerDBDAO implements CustomerDAO {
 		rs.close();
 		st.close();
 		ConnectionPool.getInstance().returnConnection(con);
-		throw new ProjectException("Customer Login failed.");
+		throw new LogInException(this);
 	}
 
 }

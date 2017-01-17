@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
-import db_package.Company;
+import db_package.ClientType;
 import db_package.CompanyDBDAO;
 import db_package.Coupon;
 import db_package.CouponDBDAO;
 import db_package.CouponType;
-import exceptions.ProjectException;
+import exceptions.DuplicateDataException;
+import exceptions.NoDataException;
+import exceptions.OverallException;
 /**
  * This class is Company business-layer level that uses for speaking 
  * with Company credentials with DAO-layer.
@@ -45,7 +47,7 @@ public class CompanyFacade implements CouponClientFacade {
 	public void createCoupon(Coupon coup) {
 		try {
 			couponDAO.createCoupon(coup);
-		} catch (ProjectException | SQLException e) {
+		} catch (OverallException | SQLException | DuplicateDataException e) {
 			System.err.println(e.getMessage());
 		}
 	}
@@ -95,7 +97,7 @@ public class CompanyFacade implements CouponClientFacade {
 	public Collection<Coupon> getAllCoupons() {
 		try {
 			return companyDAO.getCoupons();
-		} catch (ProjectException | SQLException e) {
+		} catch (OverallException | SQLException | NoDataException e) {
 			System.err.println(e.getMessage());
 		}
 		return null;
@@ -117,9 +119,9 @@ public class CompanyFacade implements CouponClientFacade {
 				}
 			}
 			if (couponByType.isEmpty()) {
-				throw new ProjectException("Coupon with " + coupType.toString() + " type is not exist!");
+				throw new NoDataException("Coupon with " + coupType.toString() + " type is not exist!");
 			}
-		} catch (ProjectException | SQLException e) {
+		} catch (OverallException | SQLException | NoDataException e) {
 			System.err.println(e.getMessage());
 		}
 		return couponByType;
@@ -141,7 +143,7 @@ public class CompanyFacade implements CouponClientFacade {
 						couponTillPrice.add(coup);
 					}
 				}
-			} catch (ProjectException | SQLException e) {
+			} catch (OverallException | SQLException | NoDataException e) {
 				System.err.println(e.getMessage());
 			}
 		return couponTillPrice;
@@ -162,7 +164,7 @@ public class CompanyFacade implements CouponClientFacade {
 						couponTillDate.add(coup);
 					}
 				}
-			} catch (ProjectException | SQLException e) {
+			} catch (OverallException | SQLException | NoDataException e) {
 				System.err.println(e.getMessage());
 			}
 		return couponTillDate;
@@ -183,20 +185,7 @@ public class CompanyFacade implements CouponClientFacade {
 	public static void setCompanyName(String companyName) {
 		CompanyFacade.companyName = companyName;
 	}
-	
-	/**
-	 * Method for get specific Company by ID
-	 * @param compId - ID of Company
-	 * @return Specific company
-	 */
-	public Company getCompany(long compId){
-		try {
-			return companyDAO.getCompany(compId);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+
 
 	/**
 	 * Method to login with Company credential
@@ -206,7 +195,7 @@ public class CompanyFacade implements CouponClientFacade {
 	 * @return CompanyFacade Object
 	 */
 	@Override
-	public CouponClientFacade login(String name, String password, String clienType) {
+	public CouponClientFacade login(String name, String password, ClientType clienType) {
 		CompanyFacade.setCompanyName(name);
 		try {
 			if (companyDAO.login(name, password)) {

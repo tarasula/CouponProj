@@ -51,7 +51,7 @@ public interface CompanyDAO {
 	public Collection<Coupon> getCoupons() throws Exception;
 		/**
 		 * Login method 
-		 * @param custName - Company name
+		 * @param compName - Company name
 		 * @param password - Company password
 		 * @return true or false
 		 * @throws Exception if the login is failed

@@ -1,4 +1,7 @@
 package facade;
+
+import db_package.ClientType;
+
 /**
  * CouponClientFacade Interface for Facade-layer
  * @author Andrey Orlov
@@ -12,6 +15,6 @@ public interface CouponClientFacade {
 	 * @param clienType - Type of client (Company, Customer, Administrator)
 	 * @return CouponClientFacade Object
 	 */
-	public CouponClientFacade login(String name, String password, String clienType);
+	public CouponClientFacade login(String name, String password, ClientType clienType);
 
 }
